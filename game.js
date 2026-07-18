@@ -9,6 +9,14 @@ const organInfo = {
 };
 
 const organCells = new Set(Object.keys(organInfo));
+const DEFAULT_TIME_LIMIT = 60;
+const TIME_WARNING_SECONDS = 10;
+const TIME_DARK_SECONDS = 5;
+const TIME_PENALTY_SECONDS = 8;
+const SLOW_DURATION_MS = 5000;
+const NORMAL_MOVE_DELAY_MS = 80;
+const SLOWED_MOVE_DELAY_MS = 460;
+const HIT_GRACE_MS = 900;
 
 const scienceNotes = {
   '.': {
@@ -94,6 +102,7 @@ const levels = [
     cargo: ['起始狀態：CO2 偏高', '必經器官：肺臟', '目的地：肌肉'],
     route: ['L', 'M'],
     start: 'H',
+    timeLimit: 55,
     status: ['CO2 偏高', '含氧血', '氧氣送達肌肉'],
     moving: ['co2', 'plaque', 'glucose']
   },
@@ -103,6 +112,7 @@ const levels = [
     cargo: ['取得：葡萄糖', '取得：胺基酸', '目的地：大腦'],
     route: ['I', 'V', 'B'],
     start: 'H',
+    timeLimit: 65,
     status: ['空車血液', '載入養分', '肝臟調節完成', '大腦獲得能量'],
     moving: ['pathogen', 'amino', 'plaque']
   },
@@ -112,6 +122,7 @@ const levels = [
     cargo: ['起點：肌肉', '處理：肝臟', '排除：腎臟'],
     route: ['V', 'K'],
     start: 'M',
+    timeLimit: 55,
     status: ['代謝廢物增加', '尿素形成', '腎臟過濾完成'],
     moving: ['toxin', 'co2', 'glucose']
   },
@@ -121,17 +132,49 @@ const levels = [
     cargo: ['先取得：氧氣', '再取得：葡萄糖', '目的地：大腦'],
     route: ['L', 'I', 'B'],
     start: 'H',
+    timeLimit: 70,
     status: ['等待補給', '氧氣充足', '氧氣與葡萄糖齊備', '供應大腦完成'],
     moving: ['pathogen', 'toxin', 'amino']
   },
   {
-    title: '最終任務：供應運動中的肌肉',
+    title: '任務五：供應運動中的肌肉',
     story: '肌肉正在快速收縮，需要葡萄糖和氧氣。先到小腸載入養分，再到肺臟補氧，最後前往肌肉。',
     cargo: ['載入：葡萄糖', '補充：氧氣', '目的地：肌肉'],
     route: ['I', 'L', 'M'],
     start: 'H',
+    timeLimit: 70,
     status: ['準備補給', '養分充足', '氧氣與養分齊備', '肌肉供能完成'],
     moving: ['plaque', 'co2', 'toxin', 'glucose']
+  },
+  {
+    title: '任務六：血糖調節與能量配送',
+    story: '血糖偏高時，先到小腸確認吸收來源，再到肝臟調節養分，最後把能量送到肌肉使用。',
+    cargo: ['確認：小腸吸收', '調節：肝臟', '目的地：肌肉'],
+    route: ['I', 'V', 'M'],
+    start: 'H',
+    timeLimit: 68,
+    status: ['血糖等待調節', '養分來源確認', '肝臟調節完成', '肌肉取得能量'],
+    moving: ['glucose', 'plaque', 'pathogen', 'toxin']
+  },
+  {
+    title: '任務七：水分鹽類平衡危機',
+    story: '身體流汗後水分與鹽類需要調節。先到腎臟維持體液平衡，再把穩定血流送往大腦。',
+    cargo: ['調節：水分與鹽類', '維持：大腦供應'],
+    route: ['K', 'B'],
+    start: 'H',
+    timeLimit: 58,
+    status: ['體液平衡待調整', '腎臟調節完成', '大腦供應穩定'],
+    moving: ['toxin', 'co2', 'plaque', 'amino']
+  },
+  {
+    title: '最終任務：全身循環壓力測驗',
+    story: '巡邏物變多，時間更緊。從肌肉帶走 CO2，到肺臟交換氣體，再補充小腸養分，經肝臟調節後供應大腦。',
+    cargo: ['帶走：CO2', '補充：氧氣與葡萄糖', '最終供應：大腦'],
+    route: ['L', 'I', 'V', 'B'],
+    start: 'M',
+    timeLimit: 85,
+    status: ['運動後待回收', '肺臟完成氣體交換', '小腸載入養分', '肝臟完成調節', '大腦供應完成'],
+    moving: ['co2', 'toxin', 'pathogen', 'plaque', 'glucose']
   }
 ];
 
@@ -219,7 +262,13 @@ let state = {
   reviews: [],
   movers: [],
   locked: false,
-  timer: null
+  moverTimer: null,
+  countdownTimer: null,
+  timeLeft: DEFAULT_TIME_LIMIT,
+  slowUntil: 0,
+  lastMoveAt: 0,
+  hitCooldownUntil: 0,
+  failReason: ''
 };
 
 const $ = id => document.getElementById(id);
@@ -230,7 +279,7 @@ function showScreen(id) {
 }
 
 function startGame() {
-  clearMoverLoop();
+  clearLoops();
   state = {
     level: 0,
     score: 0,
@@ -242,18 +291,30 @@ function startGame() {
     reviews: [],
     movers: [],
     locked: false,
-    timer: null
+    moverTimer: null,
+    countdownTimer: null,
+    timeLeft: DEFAULT_TIME_LIMIT,
+    slowUntil: 0,
+    lastMoveAt: 0,
+    hitCooldownUntil: 0,
+    failReason: ''
   };
   showScreen('gameScreen');
   loadLevel();
 }
 
 function loadLevel() {
+  clearLoops();
   const level = levels[state.level];
   state.step = 0;
   state.locked = false;
   state.pos = findOrgan(level.start);
   state.movers = makeMovers(level);
+  state.timeLeft = level.timeLimit || DEFAULT_TIME_LIMIT;
+  state.slowUntil = 0;
+  state.lastMoveAt = 0;
+  state.hitCooldownUntil = 0;
+  state.failReason = '';
   $('missionTitle').textContent = level.title;
   $('missionStory').textContent = level.story;
   $('cargoList').innerHTML = level.cargo.map(item => `<span class="cargo-chip">${item}</span>`).join('');
@@ -262,6 +323,7 @@ function loadLevel() {
   render();
   updateHUD();
   startMoverLoop();
+  startCountdownLoop();
 }
 
 function findOrgan(code) {
@@ -328,6 +390,7 @@ function render() {
 
       if (state.pos.r === r && state.pos.c === c) {
         cell.classList.add('player');
+        if (Date.now() < state.slowUntil) cell.classList.add('slowed');
       }
 
       maze.appendChild(cell);
@@ -343,6 +406,16 @@ function updateHUD() {
   $('levelLabel').textContent = `${state.level + 1}/${levels.length}`;
   $('scoreLabel').textContent = state.score;
   $('lifeLabel').textContent = '❤'.repeat(state.lives) + '♡'.repeat(3 - state.lives);
+  $('timeLabel').textContent = state.timeLeft;
+  const gameScreen = $('gameScreen');
+  gameScreen.classList.toggle('time-warning', state.timeLeft <= TIME_WARNING_SECONDS);
+  gameScreen.classList.toggle('time-dark', state.timeLeft <= TIME_DARK_SECONDS);
+  document.body.style.setProperty('--danger-darkness', dangerDarkness());
+}
+
+function dangerDarkness() {
+  if (state.timeLeft > TIME_DARK_SECONDS) return 0;
+  return Math.min(0.78, (TIME_DARK_SECONDS - state.timeLeft + 1) * 0.14).toFixed(2);
 }
 
 function currentExpectedOrgan() {
@@ -383,6 +456,10 @@ function activateKnowledgeKey(event, action) {
 
 function move(dr, dc) {
   if (state.locked) return;
+  const now = Date.now();
+  const moveDelay = now < state.slowUntil ? SLOWED_MOVE_DELAY_MS : NORMAL_MOVE_DELAY_MS;
+  if (now - state.lastMoveAt < moveDelay) return;
+  state.lastMoveAt = now;
   const nr = state.pos.r + dr;
   const nc = state.pos.c + dc;
   if (!isWalkable(nr, nc)) {
@@ -441,7 +518,10 @@ function visitOrgan(code) {
   state.score = Math.max(0, state.score - 8);
   state.reviews.push(`❌ ${level.title}：誤入${organInfo[code].name}，應先到${organInfo[expected].name}`);
   bump(`路線不對：目前應先到${organInfo[expected].name}，不是${organInfo[code].name}。`);
-  if (state.lives <= 0) finish(false);
+  if (state.lives <= 0) {
+    state.failReason = 'life';
+    finish(false);
+  }
 }
 
 function completeLevel() {
@@ -481,19 +561,26 @@ function isMoverPath(r, c) {
 }
 
 function checkMoverCollision() {
+  if (Date.now() < state.hitCooldownUntil) return;
   const hit = state.movers.find(mover => mover.r === state.pos.r && mover.c === state.pos.c);
   if (!hit) return;
+  state.hitCooldownUntil = Date.now() + HIT_GRACE_MS;
+  state.slowUntil = Date.now() + SLOW_DURATION_MS;
   state.lives--;
   state.score = Math.max(0, state.score - 10);
+  state.timeLeft = Math.max(0, state.timeLeft - TIME_PENALTY_SECONDS);
   state.pos = findOrgan(levels[state.level].start);
   state.reviews.push(`⚠️ ${levels[state.level].title}：碰到${hit.name}`);
-  bump(hit.message + ' 回到起點重新規劃路線。');
-  if (state.lives <= 0) finish(false);
+  flashTime();
+  bump(`${hit.message} 血液流速下降，倒扣 ${TIME_PENALTY_SECONDS} 秒。`);
+  if (state.lives <= 0) state.failReason = 'life';
+  if (state.timeLeft <= 0) state.failReason = 'time';
+  if (state.lives <= 0 || state.timeLeft <= 0) finish(false);
 }
 
 function startMoverLoop() {
   clearMoverLoop();
-  state.timer = setInterval(() => {
+  state.moverTimer = setInterval(() => {
     if (state.locked || !document.getElementById('gameScreen').classList.contains('active')) return;
     moveHazards();
     checkMoverCollision();
@@ -503,7 +590,38 @@ function startMoverLoop() {
 }
 
 function clearMoverLoop() {
-  if (state.timer) clearInterval(state.timer);
+  if (state.moverTimer) clearInterval(state.moverTimer);
+  state.moverTimer = null;
+}
+
+function startCountdownLoop() {
+  clearCountdownLoop();
+  state.countdownTimer = setInterval(() => {
+    if (state.locked || !$('gameScreen').classList.contains('active')) return;
+    state.timeLeft = Math.max(0, state.timeLeft - 1);
+    updateHUD();
+    if (state.timeLeft <= 0) {
+      state.failReason = 'time';
+      state.reviews.push(`⌛ ${levels[state.level].title}：時間用完`);
+      finish(false);
+    }
+  }, 1000);
+}
+
+function clearCountdownLoop() {
+  if (state.countdownTimer) clearInterval(state.countdownTimer);
+  state.countdownTimer = null;
+}
+
+function clearLoops() {
+  clearMoverLoop();
+  clearCountdownLoop();
+}
+
+function flashTime() {
+  $('timeLabel').classList.remove('time-hit');
+  void $('timeLabel').offsetWidth;
+  $('timeLabel').classList.add('time-hit');
 }
 
 function bump(message) {
@@ -515,14 +633,19 @@ function bump(message) {
 }
 
 function finish(win) {
-  clearMoverLoop();
+  clearLoops();
   showScreen('resultScreen');
+  $('gameScreen').classList.remove('time-warning', 'time-dark');
+  document.body.style.setProperty('--danger-darkness', 0);
   const accuracy = state.total ? Math.round((state.correct / state.total) * 100) : 0;
+  const failText = state.failReason === 'time'
+    ? '時間用完了。可以先規劃器官順序，再避開巡邏物加速完成任務。'
+    : '生命值用完了。複習器官功能與任務順序後，再挑戰一次。';
   $('resultIcon').textContent = win ? '🏆' : '🩹';
   $('resultTitle').textContent = win ? '循環運輸大師！' : '任務暫停，重新整備！';
   $('resultText').textContent = win
     ? '你已完成肺部氣體交換、養分吸收、肝臟處理、腎臟排除與組織供應任務。'
-    : '生命值用完了。複習器官功能與任務順序後，再挑戰一次。';
+    : failText;
   $('finalScore').textContent = state.score;
   $('accuracy').textContent = accuracy + '%';
   $('completedLevels').textContent = `${win ? levels.length : state.level}/${levels.length}`;
