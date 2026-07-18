@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="國中生物循環系統互動教材：在人體迷宮中完成氣體、養分與代謝廢物的運送任務。" />
+  <title>血球迷宮：循環運輸大挑戰</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">國中生物互動教材</p>
+      <h1>血球迷宮：循環運輸大挑戰</h1>
+    </div>
+    <div class="score-panel" aria-live="polite">
+      <span>關卡 <b id="levelLabel">1/5</b></span>
+      <span>分數 <b id="scoreLabel">0</b></span>
+      <span>生命 <b id="lifeLabel">❤❤❤</b></span>
+    </div>
+  </header>
+
+  <main>
+    <section id="introScreen" class="screen active hero">
+      <div class="hero-copy">
+        <p class="badge">🚑 人體運輸隊招募中</p>
+        <h2>化身紅血球，在人體迷宮中送對物質、走對路線！</h2>
+        <p>你需要判斷肺、心臟、小腸、肝臟、腎臟、腦與肌肉需要交換哪些物質，並避開錯誤的血管與障礙。</p>
+        <div class="learning-goals">
+          <article><b>辨認運輸物質</b><span>氧氣、二氧化碳、葡萄糖、胺基酸、尿素與水</span></article>
+          <article><b>理解器官角色</b><span>肺交換氣體、小腸吸收養分、腎臟移除尿素</span></article>
+          <article><b>建立循環路徑</b><span>心臟、動脈、微血管、靜脈之間的關係</span></article>
+        </div>
+        <button id="startBtn" class="primary">開始任務</button>
+        <button id="openGuideBtn" class="secondary">先看操作與知識卡</button>
+      </div>
+      <div class="hero-visual" aria-label="人體循環示意">
+        <div class="body-map">
+          <span class="organ brain">🧠<small>腦</small></span>
+          <span class="organ lung">🫁<small>肺</small></span>
+          <span class="organ heart">❤️<small>心臟</small></span>
+          <span class="organ liver">🟤<small>肝臟</small></span>
+          <span class="organ gut">🌀<small>小腸</small></span>
+          <span class="organ kidney">🫘<small>腎臟</small></span>
+          <span class="organ muscle">💪<small>肌肉</small></span>
+          <div class="vessel red"></div><div class="vessel blue"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen game-layout">
+      <aside class="mission-card">
+        <p class="eyebrow">目前任務</p>
+        <h2 id="missionTitle"></h2>
+        <p id="missionStory"></p>
+        <div class="cargo-box">
+          <h3>你的運輸任務</h3>
+          <div id="cargoList"></div>
+        </div>
+        <div class="legend">
+          <h3>地圖圖示</h3>
+          <p><span>🚩</span>起點　<span>🏁</span>目標器官</p>
+          <p><span>❓</span>知識閘門　<span>⚠️</span>錯誤路線</p>
+        </div>
+        <button id="restartLevelBtn" class="secondary small">重新挑戰本關</button>
+      </aside>
+
+      <section class="maze-card">
+        <div class="maze-toolbar">
+          <div id="feedback" class="feedback">使用方向鍵、WASD 或畫面按鈕移動。</div>
+          <button id="hintBtn" class="ghost">提示（-5分）</button>
+        </div>
+        <div id="maze" class="maze" role="application" aria-label="循環系統迷宮"></div>
+        <div class="controls" aria-label="行動控制">
+          <button data-dir="up">▲</button>
+          <div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div>
+        </div>
+      </section>
+
+      <aside class="knowledge-card">
+        <p class="eyebrow">隨身知識卡</p>
+        <h2 id="organName">循環系統</h2>
+        <div id="organIcon" class="big-icon">🩸</div>
+        <p id="organFact">血液負責運輸物質；真正大量交換物質的地方通常是微血管。</p>
+        <div class="status-list">
+          <p><span>目前位置</span><b id="positionLabel">起點</b></p>
+          <p><span>已通過閘門</span><b id="gateLabel">0</b></p>
+          <p><span>連續答對</span><b id="streakLabel">0</b></p>
+        </div>
+      </aside>
+    </section>
+
+    <section id="resultScreen" class="screen result-screen">
+      <div class="result-card">
+        <div id="resultIcon" class="result-icon">🏆</div>
+        <h2 id="resultTitle">循環運輸大師！</h2>
+        <p id="resultText"></p>
+        <div class="result-grid">
+          <article><span>總分</span><b id="finalScore">0</b></article>
+          <article><span>答對率</span><b id="accuracy">0%</b></article>
+          <article><span>完成關卡</span><b id="completedLevels">0/5</b></article>
+        </div>
+        <div id="reviewList" class="review-list"></div>
+        <button id="playAgainBtn" class="primary">再玩一次</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="quizDialog" class="modal">
+    <form method="dialog" id="quizForm">
+      <p class="eyebrow">知識閘門</p>
+      <h2 id="quizQuestion"></h2>
+      <div id="quizOptions" class="quiz-options"></div>
+      <p id="quizExplain" class="quiz-explain"></p>
+      <div class="modal-actions">
+        <button id="submitQuizBtn" type="button" class="primary">送出答案</button>
+        <button id="continueQuizBtn" type="button" class="primary hidden">繼續前進</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="guideDialog" class="modal guide-modal">
+    <form method="dialog">
+      <button class="close" aria-label="關閉">×</button>
+      <p class="eyebrow">任務手冊</p>
+      <h2>循環系統快速整理</h2>
+      <div class="guide-grid">
+        <article><span>❤️</span><h3>心臟</h3><p>像幫浦一樣推動血液。右心將血送往肺；左心將含氧血送往全身。</p></article>
+        <article><span>🫁</span><h3>肺</h3><p>血液取得氧氣並排出二氧化碳，完成氣體交換。</p></article>
+        <article><span>🌀</span><h3>小腸</h3><p>消化後的葡萄糖、胺基酸等養分進入血液，再送往肝臟與各組織。</p></article>
+        <article><span>🟤</span><h3>肝臟</h3><p>調節養分、儲存肝糖，並將有毒的氨轉變為尿素。</p></article>
+        <article><span>🫘</span><h3>腎臟</h3><p>過濾血液，移除尿素及多餘水分與鹽類，形成尿液。</p></article>
+        <article><span>🧠</span><h3>腦與肌肉</h3><p>需要氧氣與葡萄糖進行細胞呼吸，並產生二氧化碳等代謝產物。</p></article>
+      </div>
+      <p class="tip">操作：方向鍵／WASD／畫面按鈕。走到「❓」要答題，答對才可通過。</p>
+    </form>
+  </dialog>
+
+  <footer>本教材為純前端靜態網頁，可直接部署於 GitHub Pages。</footer>
+  <script src="game.js"></script>
+</body>
+</html>
