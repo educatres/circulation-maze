@@ -26,6 +26,18 @@
 html,body{touch-action:pan-x pan-y}
 footer:empty{display:none}
 button,.cell,.mover,.organ-cell{touch-action:manipulation}
+.levels-modal{width:min(940px,94vw)}
+.levels-modal form{max-height:min(82vh,820px);overflow:auto}
+.levels-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.level-overview-card{padding:14px;border:1px solid #d8e8ef;border-radius:14px;background:#f8fbfc}
+.level-overview-head{display:flex;gap:10px;align-items:flex-start}
+.level-overview-head b{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:10px;background:#e84955;color:white}
+.level-overview-head h3{font-size:1rem;line-height:1.35;margin:2px 0 0}
+.level-overview-card p{margin:9px 0;color:var(--muted);line-height:1.55;font-size:.9rem}
+.level-overview-meta,.level-overview-cargo{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.level-overview-meta span,.level-overview-cargo span{padding:5px 8px;border-radius:999px;background:white;border:1px solid #dceaf0;font-size:.8rem;font-weight:800}
+.level-overview-card h4{margin:10px 0 5px;font-size:.86rem}
+.level-overview-card ul{margin:0;padding-left:1.15rem;color:var(--ink);font-size:.86rem;line-height:1.5}
 .controls{margin:0 0 16px;padding:12px;border-radius:16px;background:#eef7fb;border:1px solid #d8e8ef;text-align:center;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .controls button{width:58px;height:50px;margin:3px;border-radius:12px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .game-layout.time-warning::before{content:'';position:fixed;inset:0;z-index:90;pointer-events:none;border:9px solid transparent;border-image:linear-gradient(135deg,#ff1f45,#ff7a1f,#b00024) 1;box-shadow:inset 0 0 42px rgba(255,0,40,.42);animation:dangerBorder .42s infinite alternate}
@@ -40,4 +52,4 @@ button,.cell,.mover,.organ-cell{touch-action:manipulation}
 @keyframes dangerBorder{from{opacity:.45;box-shadow:inset 0 0 22px rgba(255,0,40,.28)}to{opacity:1;box-shadow:inset 0 0 62px rgba(255,0,40,.72)}}
 @keyframes timeHit{50%{transform:scale(1.3);color:#fff;background:#e84955;border-radius:8px;padding:2px 6px}}
 @media(max-width:1000px){.knowledge-card{display:block}.controls{max-width:240px;margin:0 auto 16px}}
-@media(max-width:720px){.organ-cell::after{display:none}.cell{border-radius:4px}.maze{gap:2px;padding:4px}.mover{width:82%;height:82%;font-size:.48rem}.controls button{width:54px;height:48px}}
+@media(max-width:720px){.organ-cell::after{display:none}.cell{border-radius:4px}.maze{gap:2px;padding:4px}.mover{width:82%;height:82%;font-size:.48rem}.controls button{width:54px;height:48px}.levels-overview{grid-template-columns:1fr}}

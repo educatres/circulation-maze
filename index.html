@@ -33,6 +33,7 @@
           <article><b>建立循環路徑</b><span>心臟、動脈、微血管、靜脈之間的關係</span></article>
         </div>
         <button id="startBtn" class="primary">開始任務</button>
+        <button id="openLevelsBtn" class="secondary">查看全部關卡</button>
         <button id="openGuideBtn" class="secondary">先看操作與知識卡</button>
       </div>
       <div class="hero-visual" aria-label="人體循環示意">
@@ -140,6 +141,15 @@
         <article><span>🧠</span><h3>腦與肌肉</h3><p>需要氧氣與葡萄糖進行細胞呼吸，並產生二氧化碳等代謝產物。</p></article>
       </div>
       <p class="tip">操作：方向鍵／WASD／畫面按鈕。依照任務狀態選擇正確器官，避開會移動的物質。</p>
+    </form>
+  </dialog>
+
+  <dialog id="levelsDialog" class="modal levels-modal">
+    <form method="dialog">
+      <button class="close" aria-label="關閉">×</button>
+      <p class="eyebrow">關卡總覽</p>
+      <h2>任務設計與學習重點</h2>
+      <div id="levelsOverview" class="levels-overview"></div>
     </form>
   </dialog>
 

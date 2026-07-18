@@ -103,6 +103,7 @@ const levels = [
     route: ['L', 'M'],
     start: 'H',
     timeLimit: 55,
+    goals: ['理解 CO2 偏高時要先經肺臟氣體交換', '建立肺臟取得氧氣、肌肉消耗氧氣的路徑概念'],
     status: ['CO2 偏高', '含氧血', '氧氣送達肌肉'],
     moving: ['co2', 'plaque', 'glucose']
   },
@@ -113,6 +114,7 @@ const levels = [
     route: ['I', 'V', 'B'],
     start: 'H',
     timeLimit: 65,
+    goals: ['知道小腸負責吸收葡萄糖與胺基酸', '理解肝臟可調節養分再供應大腦'],
     status: ['空車血液', '載入養分', '肝臟調節完成', '大腦獲得能量'],
     moving: ['pathogen', 'amino', 'plaque']
   },
@@ -123,6 +125,7 @@ const levels = [
     route: ['V', 'K'],
     start: 'M',
     timeLimit: 55,
+    goals: ['理解肌肉活動會產生代謝廢物', '認識肝臟形成尿素、腎臟過濾排除的先後關係'],
     status: ['代謝廢物增加', '尿素形成', '腎臟過濾完成'],
     moving: ['toxin', 'co2', 'glucose']
   },
@@ -133,6 +136,7 @@ const levels = [
     route: ['L', 'I', 'B'],
     start: 'H',
     timeLimit: 70,
+    goals: ['比較氧氣與葡萄糖對大腦供能的重要性', '練習先補氧、再補養分、最後送達目的器官的路線判斷'],
     status: ['等待補給', '氧氣充足', '氧氣與葡萄糖齊備', '供應大腦完成'],
     moving: ['pathogen', 'toxin', 'amino']
   },
@@ -143,6 +147,7 @@ const levels = [
     route: ['I', 'L', 'M'],
     start: 'H',
     timeLimit: 70,
+    goals: ['統整細胞呼吸需要氧氣與葡萄糖', '理解小腸、肺臟、肌肉在供能任務中的角色分工'],
     status: ['準備補給', '養分充足', '氧氣與養分齊備', '肌肉供能完成'],
     moving: ['plaque', 'co2', 'toxin', 'glucose']
   },
@@ -153,6 +158,7 @@ const levels = [
     route: ['I', 'V', 'M'],
     start: 'H',
     timeLimit: 68,
+    goals: ['認識小腸吸收與血糖來源的關係', '理解肝臟調節養分後再送往組織使用'],
     status: ['血糖等待調節', '養分來源確認', '肝臟調節完成', '肌肉取得能量'],
     moving: ['glucose', 'plaque', 'pathogen', 'toxin']
   },
@@ -163,6 +169,7 @@ const levels = [
     route: ['K', 'B'],
     start: 'H',
     timeLimit: 58,
+    goals: ['認識腎臟在水分與鹽類平衡中的角色', '理解體液平衡會影響大腦等器官的穩定供應'],
     status: ['體液平衡待調整', '腎臟調節完成', '大腦供應穩定'],
     moving: ['toxin', 'co2', 'plaque', 'amino']
   },
@@ -173,6 +180,7 @@ const levels = [
     route: ['L', 'I', 'V', 'B'],
     start: 'M',
     timeLimit: 85,
+    goals: ['整合肺臟、小腸、肝臟、大腦之間的循環運輸路徑', '在限時與巡邏物壓力下判斷正確器官順序'],
     status: ['運動後待回收', '肺臟完成氣體交換', '小腸載入養分', '肝臟完成調節', '大腦供應完成'],
     moving: ['co2', 'toxin', 'pathogen', 'plaque', 'glucose']
   }
@@ -324,6 +332,30 @@ function loadLevel() {
   updateHUD();
   startMoverLoop();
   startCountdownLoop();
+}
+
+function renderLevelsOverview() {
+  $('levelsOverview').innerHTML = levels.map((level, index) => {
+    const route = level.route.map(code => organInfo[code].name).join(' → ');
+    const goals = level.goals.map(goal => `<li>${goal}</li>`).join('');
+    const cargo = level.cargo.map(item => `<span>${item}</span>`).join('');
+    return `
+      <article class="level-overview-card">
+        <div class="level-overview-head">
+          <b>${index + 1}</b>
+          <h3>${level.title}</h3>
+        </div>
+        <p>${level.story}</p>
+        <div class="level-overview-meta">
+          <span>限時 ${level.timeLimit} 秒</span>
+          <span>${route}</span>
+        </div>
+        <div class="level-overview-cargo">${cargo}</div>
+        <h4>希望學生學會</h4>
+        <ul>${goals}</ul>
+      </article>
+    `;
+  }).join('');
 }
 
 function findOrgan(code) {
@@ -697,6 +729,10 @@ $('restartLevelBtn').onclick = () => {
 };
 $('hintBtn').onclick = hint;
 $('openGuideBtn').onclick = () => $('guideDialog').showModal();
+$('openLevelsBtn').onclick = () => {
+  renderLevelsOverview();
+  $('levelsDialog').showModal();
+};
 
 document.querySelectorAll('[data-dir]').forEach(button => {
   button.onclick = () => ({
