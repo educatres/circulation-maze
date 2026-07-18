@@ -14,7 +14,15 @@
 .organ-cell.organ-done::before{content:'✓';position:absolute;top:1px;right:3px;color:#16704d;font-weight:900;font-size:.82rem;z-index:2}
 .cell.player::after{content:'🩸';font-size:1.65em;position:absolute;z-index:5;animation:pulse .65s infinite alternate;filter:drop-shadow(0 2px 2px #fff)}
 .mover{position:absolute;z-index:4;display:grid;place-items:center;width:76%;height:76%;border-radius:50%;font-size:clamp(.48rem,1vw,.84rem);font-weight:1000;color:white;border:2px solid rgba(255,255,255,.85);box-shadow:0 4px 10px rgba(0,0,0,.25);animation:drift .7s infinite alternate}
-.mover-co2{background:#58718a}.mover-glucose{background:#f4b942;color:#382300}.mover-amino{background:#5dbb8f}.mover-toxin{background:#7231a6}.mover-pathogen{background:#d64254}.mover-plaque{background:#b76b35}
+.mover-co2{background:#58718a}.mover-glucose{background:#f4b942;color:#382300}.mover-amino{background:#5dbb8f}.mover-toxin{background:#7231a6}.mover-pathogen{background:#d64254}.mover-parasite{background:#476244}.mover-plasmodium{background:#8c2434}.mover-plaque{background:#b76b35}
+.organ-cell:focus-visible,.mover:focus-visible{outline:3px solid #1a9a89;outline-offset:2px}
+.science-panel{margin-top:16px;padding:13px;border-radius:14px;background:#f7fbfd;border:1px solid #dceaf0}
+.science-panel.hazard-note{background:#fff7f7;border-color:#f2c2c8}
+.science-panel h3{font-size:.94rem;margin:0 0 7px}
+.science-panel p{font-size:.88rem;line-height:1.6;margin:0;color:var(--muted)}
+.science-links{display:grid;gap:6px;margin-top:10px}
+.science-links a{display:block;padding:7px 9px;border-radius:9px;background:white;border:1px solid #d8e8ef;color:var(--blue);font-size:.82rem;font-weight:800;text-decoration:none;line-height:1.25}
+.science-links a:hover{background:#eef7fb}
 .legend p{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .legend p span{display:inline-grid;place-items:center;min-width:24px;min-height:24px;border-radius:7px;background:#eef6fa;font-weight:900}
 .feedback{line-height:1.45}

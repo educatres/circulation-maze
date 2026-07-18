@@ -10,6 +10,65 @@ const organInfo = {
 
 const organCells = new Set(Object.keys(organInfo));
 
+const scienceNotes = {
+  '.': {
+    title: '微血管交換',
+    text: '微血管管壁很薄，血液中的氧氣、養分、二氧化碳與代謝廢物，主要在這裡和組織細胞交換。',
+    refs: [
+      ['OpenStax：Capillary Exchange', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/20-3-capillary-exchange']
+    ]
+  },
+  H: {
+    title: '心臟是循環幫浦',
+    text: '心臟把血液推向肺臟與全身。先分清楚目前血液需要去肺循環補氧，還是進入全身循環送物質，是完成任務的關鍵。',
+    refs: [
+      ['OpenStax：Heart Anatomy', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy']
+    ]
+  },
+  L: {
+    title: '肺臟進行氣體交換',
+    text: '當血液二氧化碳偏高時，必須先經過肺泡微血管。二氧化碳離開血液，氧氣進入血液，血液才適合把氧氣送到肌肉或大腦。',
+    refs: [
+      ['OpenStax：Gas Exchange', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange']
+    ]
+  },
+  I: {
+    title: '小腸吸收養分',
+    text: '小腸絨毛與微血管增加吸收面積，消化後的葡萄糖、胺基酸等小分子可以進入血液，再被送往需要能量或材料的細胞。',
+    refs: [
+      ['OpenStax：Small Intestine', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/23-5-the-small-and-large-intestines']
+    ]
+  },
+  V: {
+    title: '肝臟調節與解毒',
+    text: '肝臟會調節血糖與養分，也參與把含氮廢物轉成尿素。遊戲中先到肝臟，代表先把部分代謝廢物轉成較容易排除的形式。',
+    refs: [
+      ['OpenStax：Accessory Organs', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/23-6-accessory-organs-in-digestion-the-liver-pancreas-and-gallbladder']
+    ]
+  },
+  K: {
+    title: '腎臟過濾血液',
+    text: '腎臟會過濾血液，把尿素、多餘水分與鹽類排入尿液。因此處理廢物任務通常要在肝臟之後再到腎臟。',
+    refs: [
+      ['OpenStax：Kidneys', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/25-1-physical-characteristics-of-urine']
+    ]
+  },
+  B: {
+    title: '大腦需要穩定供能',
+    text: '大腦對氧氣與葡萄糖供應很敏感。路線若少了肺臟補氧或小腸養分補給，就不符合大腦任務需求。',
+    refs: [
+      ['OpenStax：Nervous Tissue', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/12-2-nervous-tissue']
+    ]
+  },
+  M: {
+    title: '肌肉進行細胞呼吸',
+    text: '肌肉收縮需要能量；氧氣與葡萄糖是細胞呼吸的重要原料。運動後也會產生二氧化碳與代謝廢物，需要再運走。',
+    refs: [
+      ['OpenStax：Cellular Respiration', 'https://openstax.org/books/biology-2e/pages/7-introduction']
+    ]
+  }
+};
+
 const mazeMap = [
   '###############',
   '#B...#...L...K#',
@@ -77,12 +136,66 @@ const levels = [
 ];
 
 const moverKinds = {
-  co2: { name: '二氧化碳團', icon: 'CO₂', message: '二氧化碳亂流讓血液運輸受阻；要到肺臟才是真正的氣體交換。' },
-  glucose: { name: '游離葡萄糖', icon: '糖', message: '游離養分撞上血球會干擾路線；吸收養分要走小腸微血管。' },
-  amino: { name: '胺基酸流', icon: '胺', message: '胺基酸在血管中移動，但任務要靠正確器官完成吸收與運送。' },
-  toxin: { name: '有害物質', icon: '毒', message: '有害物質會傷害血液運輸，請避開並前往肝腎處理路線。' },
-  pathogen: { name: '病原體', icon: '菌', message: '病原體阻礙循環任務，保持距離！' },
-  plaque: { name: '血管斑塊', icon: '脂', message: '血管斑塊讓通道變窄，碰到會讓任務延誤。' }
+  co2: {
+    name: '二氧化碳團',
+    icon: 'CO₂',
+    message: '二氧化碳亂流讓血液運輸受阻；要到肺臟才是真正的氣體交換。',
+    text: '二氧化碳是細胞呼吸產生的廢氣之一。血液把它帶到肺臟，經由肺泡排出體外。',
+    refs: [['OpenStax：Gas Exchange', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange']]
+  },
+  glucose: {
+    name: '游離葡萄糖',
+    icon: '糖',
+    message: '游離養分撞上血球會干擾路線；吸收養分要走小腸微血管。',
+    text: '葡萄糖是細胞常用的能量來源。消化後的葡萄糖會由小腸吸收進入血液，再運送到大腦、肌肉等組織。',
+    refs: [['OpenStax：Carbohydrates', 'https://openstax.org/books/biology-2e/pages/3-2-carbohydrates']]
+  },
+  amino: {
+    name: '胺基酸流',
+    icon: '胺',
+    message: '胺基酸在血管中移動，但任務要靠正確器官完成吸收與運送。',
+    text: '胺基酸是蛋白質的基本單位。蛋白質被消化成胺基酸後，可被小腸吸收並由血液運送。',
+    refs: [['OpenStax：Proteins', 'https://openstax.org/books/biology-2e/pages/3-4-proteins']]
+  },
+  toxin: {
+    name: '有害物質',
+    icon: '毒',
+    message: '有害物質會傷害血液運輸，請避開並前往肝腎處理路線。',
+    text: '身體會透過肝臟代謝部分有害物質，再透過腎臟等途徑排除廢物。不是所有有害物都能靠同一器官處理。',
+    refs: [['OpenStax：Liver', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/23-6-accessory-organs-in-digestion-the-liver-pancreas-and-gallbladder']]
+  },
+  pathogen: {
+    name: '病原體',
+    icon: '菌',
+    message: '病原體阻礙循環任務，保持距離！',
+    text: '病原體包含細菌、病毒、寄生蟲等。若進入血液或組織，可能引發免疫反應，影響身體正常運輸。',
+    refs: [['CDC：Infectious Diseases', 'https://www.cdc.gov/infectious-diseases/index.html']]
+  },
+  parasite: {
+    name: '血液寄生蟲',
+    icon: '蟲',
+    message: '血液寄生蟲正在巡邏，碰到會讓紅血球受損並延誤任務。',
+    text: '有些寄生蟲會出現在血液中，甚至感染紅血球。遊戲用巡邏物表示它們會干擾血液運輸，學生要避開。',
+    refs: [['CDC：Babesiosis', 'https://www.cdc.gov/babesiosis/about/index.html']]
+  },
+  plasmodium: {
+    name: '瘧原蟲',
+    icon: '瘧',
+    message: '瘧原蟲會感染紅血球，碰到會造成嚴重干擾！',
+    text: '瘧原蟲是造成瘧疾的寄生蟲，會經由受感染蚊子傳播，並在人體肝臟與紅血球階段發育；紅血球階段和發病症狀關係密切。',
+    refs: [
+      ['CDC：About Malaria', 'https://www.cdc.gov/malaria/about/index.html'],
+      ['CDC DPDx：Malaria', 'https://www.cdc.gov/dpdx/malaria/index.html'],
+      ['WHO：Malaria Q&A', 'https://www.who.int/news-room/questions-and-answers/item/malaria']
+    ]
+  },
+  plaque: {
+    name: '血管斑塊',
+    icon: '脂',
+    message: '血管斑塊讓通道變窄，碰到會讓任務延誤。',
+    text: '血管斑塊會讓血管變窄、血流受阻。遊戲中把它做成障礙，提醒血管暢通和循環效率有關。',
+    refs: [['CDC：Cholesterol', 'https://www.cdc.gov/cholesterol/about/index.html']]
+  }
 };
 
 const moverSpawns = [
@@ -90,7 +203,9 @@ const moverSpawns = [
   { r: 3, c: 13, dr: 1, dc: 0 },
   { r: 7, c: 1, dr: 0, dc: 1 },
   { r: 11, c: 5, dr: 0, dc: -1 },
-  { r: 13, c: 11, dr: 0, dc: -1 }
+  { r: 13, c: 11, dr: 0, dc: -1 },
+  { r: 13, c: 3, dr: 0, dc: 1 },
+  { r: 3, c: 1, dr: 1, dc: 0 }
 ];
 
 let state = {
@@ -158,7 +273,8 @@ function findOrgan(code) {
 }
 
 function makeMovers(level) {
-  return level.moving.map((kind, index) => ({
+  const patrolKinds = ['parasite', 'plasmodium', ...level.moving];
+  return patrolKinds.map((kind, index) => ({
     ...moverKinds[kind],
     kind,
     r: moverSpawns[index].r,
@@ -184,6 +300,11 @@ function render() {
         cell.classList.add('organ-cell');
         cell.dataset.label = organ.name;
         cell.textContent = organ.icon;
+        cell.title = `查看${organ.name}知識`;
+        cell.setAttribute('role', 'button');
+        cell.tabIndex = 0;
+        cell.onclick = () => updateKnowledge(ch);
+        cell.onkeydown = event => activateKnowledgeKey(event, () => updateKnowledge(ch));
         const routeIndex = levels[state.level].route.indexOf(ch);
         if (ch === expected) cell.classList.add('next-organ');
         if (routeIndex >= 0 && routeIndex < state.step) cell.classList.add('organ-done');
@@ -195,6 +316,13 @@ function render() {
         marker.className = `mover mover-${mover.kind}`;
         marker.textContent = mover.icon;
         marker.title = mover.name;
+        marker.setAttribute('role', 'button');
+        marker.tabIndex = 0;
+        marker.onclick = event => {
+          event.stopPropagation();
+          updateKnowledge(`mover:${mover.kind}`);
+        };
+        marker.onkeydown = event => activateKnowledgeKey(event, () => updateKnowledge(`mover:${mover.kind}`));
         cell.appendChild(marker);
       }
 
@@ -228,14 +356,29 @@ function describePosition() {
 }
 
 function updateKnowledge(code) {
-  const info = organInfo[code] || {
+  const isMover = code.startsWith && code.startsWith('mover:');
+  const mover = isMover ? moverKinds[code.replace('mover:', '')] : null;
+  const info = mover || organInfo[code] || {
     name: '微血管通道',
     icon: '🩸',
     fact: '微血管是血液與組織細胞交換物質的重要場所。'
   };
+  const note = mover ? { title: mover.name, text: mover.text, refs: mover.refs } : scienceNotes[code] || scienceNotes['.'];
   $('organName').textContent = info.name;
   $('organIcon').textContent = info.icon;
-  $('organFact').textContent = info.fact;
+  $('organFact').textContent = info.fact || info.message;
+  $('knowledgePanel').classList.toggle('hazard-note', Boolean(mover));
+  $('scienceText').textContent = note.text;
+  $('scienceLinks').innerHTML = note.refs.map(([label, url]) => (
+    `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`
+  )).join('');
+}
+
+function activateKnowledgeKey(event, action) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  event.stopPropagation();
+  action();
 }
 
 function move(dr, dc) {
