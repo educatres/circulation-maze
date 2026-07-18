@@ -17,6 +17,18 @@ const SLOW_DURATION_MS = 5000;
 const NORMAL_MOVE_DELAY_MS = 80;
 const SLOWED_MOVE_DELAY_MS = 460;
 const HIT_GRACE_MS = 900;
+const NUTRIENT_ADD_SECONDS = 6;
+const NUTRIENT_TTL_MS = 8000;
+const NUTRIENT_SPAWN_MS = 1800;
+const MAX_NUTRIENTS = 3;
+
+const nutrientKinds = [
+  { kind: 'oxygen', name: '氧氣補給', icon: 'O₂', fact: '氧氣可幫助細胞呼吸順利進行。吃到後剩餘時間增加。' },
+  { kind: 'glucose', name: '葡萄糖補給', icon: '糖', fact: '葡萄糖是細胞常用的能量來源。吃到後剩餘時間增加。' },
+  { kind: 'amino', name: '胺基酸補給', icon: '胺', fact: '胺基酸可作為合成蛋白質的材料。吃到後剩餘時間增加。' },
+  { kind: 'water', name: '水分補給', icon: '水', fact: '水分有助於維持血液流動與體液平衡。吃到後剩餘時間增加。' },
+  { kind: 'salt', name: '鹽類補給', icon: '鹽', fact: '適量鹽類有助於維持體液平衡與神經肌肉功能。吃到後剩餘時間增加。' }
+];
 
 const scienceNotes = {
   '.': {
@@ -269,8 +281,10 @@ let state = {
   total: 0,
   reviews: [],
   movers: [],
+  nutrients: [],
   locked: false,
   moverTimer: null,
+  nutrientTimer: null,
   countdownTimer: null,
   timeLeft: DEFAULT_TIME_LIMIT,
   slowUntil: 0,
@@ -298,8 +312,10 @@ function startGame() {
     total: 0,
     reviews: [],
     movers: [],
+    nutrients: [],
     locked: false,
     moverTimer: null,
+    nutrientTimer: null,
     countdownTimer: null,
     timeLeft: DEFAULT_TIME_LIMIT,
     slowUntil: 0,
@@ -318,6 +334,7 @@ function loadLevel() {
   state.locked = false;
   state.pos = findOrgan(level.start);
   state.movers = makeMovers(level);
+  state.nutrients = [];
   state.timeLeft = level.timeLimit || DEFAULT_TIME_LIMIT;
   state.slowUntil = 0;
   state.lastMoveAt = 0;
@@ -327,10 +344,12 @@ function loadLevel() {
   $('missionStory').textContent = level.story;
   $('cargoList').innerHTML = level.cargo.map(item => `<span class="cargo-chip">${item}</span>`).join('');
   $('feedback').textContent = `下一站：${organInfo[level.route[0]].name}。避開移動物質，選對器官通過。`;
+  spawnNutrient(true);
   updateKnowledge(level.start);
   render();
   updateHUD();
   startMoverLoop();
+  startNutrientLoop();
   startCountdownLoop();
 }
 
@@ -374,8 +393,54 @@ function makeMovers(level) {
     r: moverSpawns[index].r,
     c: moverSpawns[index].c,
     dr: moverSpawns[index].dr,
-    dc: moverSpawns[index].dc
+    dc: moverSpawns[index].dc,
+    randomWalk: kind === 'parasite' || kind === 'plasmodium'
   }));
+}
+
+function randomItem(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function walkableCells() {
+  const blocked = new Set([
+    `${state.pos.r},${state.pos.c}`,
+    ...state.movers.map(item => `${item.r},${item.c}`),
+    ...state.nutrients.map(item => `${item.r},${item.c}`)
+  ]);
+  const cells = [];
+  mazeMap.forEach((row, r) => {
+    [...row].forEach((ch, c) => {
+      if (isMoverPath(r, c) && !blocked.has(`${r},${c}`)) cells.push({ r, c });
+    });
+  });
+  return cells;
+}
+
+function spawnNutrient(force = false) {
+  state.nutrients = state.nutrients.filter(item => item.expiresAt > Date.now());
+  if (state.nutrients.length >= MAX_NUTRIENTS) return;
+  if (!force && Math.random() < 0.42) return;
+  const cells = walkableCells();
+  if (!cells.length) return;
+  const nutrient = randomItem(nutrientKinds);
+  state.nutrients.push({
+    ...nutrient,
+    ...randomItem(cells),
+    expiresAt: Date.now() + NUTRIENT_TTL_MS
+  });
+}
+
+function collectNutrient() {
+  const index = state.nutrients.findIndex(item => item.r === state.pos.r && item.c === state.pos.c);
+  if (index < 0) return;
+  const [nutrient] = state.nutrients.splice(index, 1);
+  const before = state.timeLeft;
+  state.timeLeft = Math.min((levels[state.level].timeLimit || DEFAULT_TIME_LIMIT) + 20, state.timeLeft + NUTRIENT_ADD_SECONDS);
+  state.score += 12;
+  flashTime();
+  launchFireworks();
+  $('feedback').textContent = `吃到${nutrient.name}，時間 +${state.timeLeft - before} 秒！`;
 }
 
 function render() {
@@ -418,6 +483,15 @@ function render() {
         };
         marker.onkeydown = event => activateKnowledgeKey(event, () => updateKnowledge(`mover:${mover.kind}`));
         cell.appendChild(marker);
+      }
+
+      const nutrient = state.nutrients.find(item => item.r === r && item.c === c);
+      if (nutrient) {
+        const bonus = document.createElement('span');
+        bonus.className = `nutrient nutrient-${nutrient.kind}`;
+        bonus.textContent = nutrient.icon;
+        bonus.title = `${nutrient.name}：+${NUTRIENT_ADD_SECONDS}秒`;
+        cell.appendChild(bonus);
       }
 
       if (state.pos.r === r && state.pos.c === c) {
@@ -509,6 +583,7 @@ function move(dr, dc) {
   }
 
   moveHazards();
+  collectNutrient();
   checkMoverCollision();
   render();
   updateHUD();
@@ -573,6 +648,10 @@ function completeLevel() {
 
 function moveHazards() {
   state.movers.forEach(mover => {
+    if (mover.randomWalk) {
+      moveRandomWalker(mover);
+      return;
+    }
     let nr = mover.r + mover.dr;
     let nc = mover.c + mover.dc;
     if (!isMoverPath(nr, nc)) {
@@ -586,6 +665,22 @@ function moveHazards() {
       mover.c = nc;
     }
   });
+}
+
+function moveRandomWalker(mover) {
+  const options = [
+    { dr: -1, dc: 0 },
+    { dr: 1, dc: 0 },
+    { dr: 0, dc: -1 },
+    { dr: 0, dc: 1 }
+  ].filter(dir => isMoverPath(mover.r + dir.dr, mover.c + dir.dc));
+  if (!options.length) return;
+  const forward = options.find(dir => dir.dr === mover.dr && dir.dc === mover.dc);
+  const next = forward && Math.random() > 0.62 ? forward : randomItem(options);
+  mover.dr = next.dr;
+  mover.dc = next.dc;
+  mover.r += mover.dr;
+  mover.c += mover.dc;
 }
 
 function isMoverPath(r, c) {
@@ -621,9 +716,24 @@ function startMoverLoop() {
   }, 900);
 }
 
+function startNutrientLoop() {
+  clearNutrientLoop();
+  state.nutrientTimer = setInterval(() => {
+    if (state.locked || !$('gameScreen').classList.contains('active')) return;
+    state.nutrients = state.nutrients.filter(item => item.expiresAt > Date.now());
+    spawnNutrient();
+    render();
+  }, NUTRIENT_SPAWN_MS);
+}
+
 function clearMoverLoop() {
   if (state.moverTimer) clearInterval(state.moverTimer);
   state.moverTimer = null;
+}
+
+function clearNutrientLoop() {
+  if (state.nutrientTimer) clearInterval(state.nutrientTimer);
+  state.nutrientTimer = null;
 }
 
 function startCountdownLoop() {
@@ -647,6 +757,7 @@ function clearCountdownLoop() {
 
 function clearLoops() {
   clearMoverLoop();
+  clearNutrientLoop();
   clearCountdownLoop();
 }
 
@@ -654,6 +765,20 @@ function flashTime() {
   $('timeLabel').classList.remove('time-hit');
   void $('timeLabel').offsetWidth;
   $('timeLabel').classList.add('time-hit');
+}
+
+function launchFireworks() {
+  const burst = document.createElement('div');
+  burst.className = 'fireworks';
+  for (let i = 0; i < 18; i++) {
+    const spark = document.createElement('span');
+    spark.style.setProperty('--angle', `${i * 20}deg`);
+    spark.style.setProperty('--distance', `${56 + (i % 4) * 12}px`);
+    spark.style.setProperty('--color', ['#f4b942', '#e84955', '#1a9a89', '#2878c8'][i % 4]);
+    burst.appendChild(spark);
+  }
+  document.body.appendChild(burst);
+  setTimeout(() => burst.remove(), 900);
 }
 
 function bump(message) {
