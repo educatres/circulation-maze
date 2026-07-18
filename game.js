@@ -601,3 +601,7 @@ addEventListener('keydown', event => {
     move(...moves[key]);
   }
 });
+
+addEventListener('dblclick', event => {
+  event.preventDefault();
+}, { passive: false });

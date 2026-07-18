@@ -23,9 +23,14 @@
 .science-links{display:grid;gap:6px;margin-top:10px}
 .science-links a{display:block;padding:7px 9px;border-radius:9px;background:white;border:1px solid #d8e8ef;color:var(--blue);font-size:.82rem;font-weight:800;text-decoration:none;line-height:1.25}
 .science-links a:hover{background:#eef7fb}
+html,body{touch-action:pan-x pan-y}
+button,.cell,.mover,.organ-cell{touch-action:manipulation}
+.controls{margin:0 0 16px;padding:12px;border-radius:16px;background:#eef7fb;border:1px solid #d8e8ef;text-align:center;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.controls button{width:58px;height:50px;margin:3px;border-radius:12px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .legend p{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .legend p span{display:inline-grid;place-items:center;min-width:24px;min-height:24px;border-radius:7px;background:#eef6fa;font-weight:900}
 .feedback{line-height:1.45}
 @keyframes targetGlow{to{transform:scale(1.04)}}
 @keyframes drift{to{transform:translateY(-2px) scale(1.06)}}
-@media(max-width:720px){.organ-cell::after{display:none}.cell{border-radius:4px}.maze{gap:2px;padding:4px}.mover{width:82%;height:82%;font-size:.48rem}}
+@media(max-width:1000px){.knowledge-card{display:block}.controls{max-width:240px;margin:0 auto 16px}}
+@media(max-width:720px){.organ-cell::after{display:none}.cell{border-radius:4px}.maze{gap:2px;padding:4px}.mover{width:82%;height:82%;font-size:.48rem}.controls button{width:54px;height:48px}}

@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="description" content="國中生物循環系統互動教材：在人體迷宮中完成氣體、養分與代謝廢物的運送任務。" />
   <title>血球迷宮：循環運輸大挑戰</title>
   <link rel="stylesheet" href="styles.css" />
@@ -72,13 +72,13 @@
           <button id="hintBtn" class="ghost">提示（-5分）</button>
         </div>
         <div id="maze" class="maze" role="application" aria-label="循環系統迷宮"></div>
-        <div class="controls" aria-label="行動控制">
-          <button data-dir="up">▲</button>
-          <div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div>
-        </div>
       </section>
 
       <aside class="knowledge-card">
+        <div class="controls" aria-label="行動控制">
+          <button data-dir="up" aria-label="向上移動">▲</button>
+          <div><button data-dir="left" aria-label="向左移動">◀</button><button data-dir="down" aria-label="向下移動">▼</button><button data-dir="right" aria-label="向右移動">▶</button></div>
+        </div>
         <p class="eyebrow">隨身知識卡</p>
         <h2 id="organName">循環系統</h2>
         <div id="organIcon" class="big-icon">🩸</div>
