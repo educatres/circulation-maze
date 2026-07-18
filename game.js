@@ -22,6 +22,8 @@ const NUTRIENT_ADD_SECONDS = 6;
 const NUTRIENT_TTL_MS = 8000;
 const NUTRIENT_SPAWN_MS = 1800;
 const MAX_NUTRIENTS = 3;
+const TOXIN_TTL_MS = 7000;
+const TOXIN_RESPAWN_CHANCE = 0.38;
 
 const nutrientKinds = [
   { kind: 'oxygen', name: '氧氣補給', icon: 'O₂', fact: '氧氣可幫助細胞呼吸順利進行。吃到後剩餘時間增加。' },
@@ -399,7 +401,8 @@ function makeMovers(level) {
     ...moverKinds[kind],
     kind,
     r: cells[(index * 11 + 4) % cells.length][0],
-    c: cells[(index * 11 + 4) % cells.length][1]
+    c: cells[(index * 11 + 4) % cells.length][1],
+    expiresAt: kind === 'toxin' ? Date.now() + TOXIN_TTL_MS : null
   }));
 }
 
@@ -729,12 +732,32 @@ function completeLevel() {
 }
 
 function moveHazards() {
+  const level = levels[state.level];
+  const now = Date.now();
+  state.movers = state.movers.filter(mover => mover.kind !== 'toxin' || mover.expiresAt > now);
+
+  if (level.moving.includes('toxin') && !state.movers.some(mover => mover.kind === 'toxin') && Math.random() < TOXIN_RESPAWN_CHANCE) {
+    spawnToxin();
+  }
+
   state.movers.forEach(mover => {
+    if (mover.kind === 'toxin') return;
     const exits = (flowExits.get(`${mover.r},${mover.c}`) || []).filter(exit => isWalkable(exit.r, exit.c));
     if (!exits.length) return;
     const next = randomItem(exits);
     mover.r = next.r;
     mover.c = next.c;
+  });
+}
+
+function spawnToxin() {
+  const cells = walkableCells();
+  if (!cells.length) return;
+  state.movers.push({
+    ...moverKinds.toxin,
+    kind: 'toxin',
+    ...randomItem(cells),
+    expiresAt: Date.now() + TOXIN_TTL_MS
   });
 }
 
@@ -751,6 +774,20 @@ function checkMoverCollision() {
   const hit = state.movers.find(mover => mover.r === state.pos.r && mover.c === state.pos.c);
   if (!hit) return;
   state.hitCooldownUntil = Date.now() + HIT_GRACE_MS;
+
+  if (hit.kind === 'toxin') {
+    state.movers = state.movers.filter(mover => mover !== hit);
+    state.timeLeft = Math.max(0, state.timeLeft - TIME_PENALTY_SECONDS);
+    state.reviews.push(`⚠️ ${levels[state.level].title}：碰到${hit.name}，倒扣時間`);
+    flashTime();
+    bump(`碰到${hit.name}，倒扣 ${TIME_PENALTY_SECONDS} 秒。血球留在原地，請繼續前進！`);
+    if (state.timeLeft <= 0) {
+      state.failReason = 'time';
+      finish(false);
+    }
+    return;
+  }
+
   state.slowUntil = Date.now() + SLOW_DURATION_MS;
   state.lives--;
   state.score = Math.max(0, state.score - 10);
