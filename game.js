@@ -1,5 +1,6 @@
 const organInfo = {
-  H: { name: '心臟', icon: '❤️', fact: '心臟像幫浦推動血液，是全身循環與肺循環的出發站。' },
+  R: { name: '右心', icon: '💙', fact: '右心收集全身回流的缺氧血，再經肺動脈把血液送往肺臟。' },
+  H: { name: '左心', icon: '❤️', fact: '左心接收肺臟送回的含氧血，再經主動脈送往全身器官。' },
   L: { name: '肺臟', icon: '🫁', fact: '肺泡周圍的微血管讓血液排出二氧化碳、取得氧氣。' },
   I: { name: '小腸', icon: '🌀', fact: '小腸絨毛增加吸收面積，葡萄糖與胺基酸會進入血液。' },
   V: { name: '肝臟', icon: '🟤', fact: '肝臟調節養分，也能把有毒的氨轉成較容易排除的尿素。' },
@@ -38,9 +39,16 @@ const scienceNotes = {
       ['OpenStax：Capillary Exchange', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/20-3-capillary-exchange']
     ]
   },
+  R: {
+    title: '右心啟動肺循環',
+    text: '全身回流的血液氧氣較少、二氧化碳較多。右心把它送進肺動脈，前往肺泡周圍的微血管交換氣體。',
+    refs: [
+      ['OpenStax：Heart Anatomy', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy']
+    ]
+  },
   H: {
-    title: '心臟是循環幫浦',
-    text: '心臟把血液推向肺臟與全身。先分清楚目前血液需要去肺循環補氧，還是進入全身循環送物質，是完成任務的關鍵。',
+    title: '左心啟動體循環',
+    text: '肺臟交換完成後，含氧血經肺靜脈回到左心；左心再把血液送進全身動脈，供應各器官。',
     refs: [
       ['OpenStax：Heart Anatomy', 'https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy']
     ]
@@ -89,111 +97,136 @@ const scienceNotes = {
   }
 };
 
-const mazeMap = [
-  '###############',
-  '#B...#...L...K#',
-  '#.##.#.#.#.##.#',
-  '#....#.#.#....#',
-  '#.####.#.####.#',
-  '#.....H.......#',
-  '###.##.#.##.###',
-  '#....#.#.#....#',
-  '#.##.#.#.#.##.#',
-  '#I...#...V...M#',
-  '#.###.###.###.#',
-  '#.....#.#.....#',
-  '###.#.....#.###',
-  '#.............#',
-  '###############'
+// 每一段皆為單向血管。支線代表器官的動脈供應與靜脈回流；血液不可逆流。
+const organPositions = {
+  R: [8, 6], L: [3, 8], H: [8, 10], B: [2, 14], K: [6, 14],
+  M: [12, 13], I: [14, 9], V: [11, 7]
+};
+
+const flowRoutes = [
+  { type: 'pulmonary', points: [[8, 6], [7, 6], [6, 6], [5, 6], [4, 6], [3, 6], [3, 7], [3, 8], [3, 9], [4, 9], [5, 9], [6, 9], [7, 9], [8, 9], [8, 10]] },
+  { type: 'systemic', points: [[8, 10], [8, 11], [7, 11], [6, 11], [5, 11], [4, 11], [3, 11], [2, 11], [2, 12], [2, 13], [2, 14], [2, 15], [3, 15], [4, 15], [5, 15], [6, 15], [7, 15], [8, 15], [9, 15], [10, 15], [11, 15], [12, 15], [13, 15], [14, 15], [15, 15], [15, 14], [15, 13], [15, 12], [15, 11], [15, 10], [15, 9], [15, 8], [15, 7], [15, 6], [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], [8, 6]] },
+  { type: 'systemic', points: [[8, 10], [9, 10], [10, 10], [10, 11], [10, 12], [9, 12], [8, 12], [7, 12], [6, 12], [6, 13], [6, 14], [7, 14], [8, 14], [9, 14], [10, 14], [11, 14], [12, 14], [13, 14], [14, 14], [15, 14], [15, 13], [15, 12], [15, 11], [15, 10], [15, 9], [15, 8], [15, 7], [15, 6], [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], [8, 6]] },
+  { type: 'systemic', points: [[8, 10], [9, 10], [10, 10], [11, 10], [12, 10], [12, 11], [12, 12], [12, 13], [13, 13], [14, 13], [15, 13], [15, 12], [15, 11], [15, 10], [15, 9], [15, 8], [15, 7], [15, 6], [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], [8, 6]] },
+  { type: 'portal', points: [[8, 10], [9, 10], [10, 10], [11, 10], [12, 10], [13, 10], [14, 10], [14, 9], [13, 9], [12, 9], [11, 9], [11, 8], [11, 7], [11, 6], [10, 6], [9, 6], [8, 6]] }
 ];
+
+function buildFlowMap() {
+  const grid = Array.from({ length: 17 }, () => Array(17).fill('#'));
+  flowRoutes.forEach(route => route.points.forEach(([r, c]) => { grid[r][c] = '.'; }));
+  Object.entries(organPositions).forEach(([code, [r, c]]) => { grid[r][c] = code; });
+  return grid.map(row => row.join(''));
+}
+
+function buildFlowExits() {
+  const exits = new Map();
+  flowRoutes.forEach(route => route.points.forEach(([r, c], index) => {
+    if (index === route.points.length - 1) return;
+    const [nr, nc] = route.points[index + 1];
+    const key = `${r},${c}`;
+    const option = { r: nr, c: nc, type: route.type };
+    const options = exits.get(key) || [];
+    if (!options.some(item => item.r === nr && item.c === nc)) options.push(option);
+    exits.set(key, options);
+  }));
+  return exits;
+}
+
+const mazeMap = buildFlowMap();
+const flowExits = buildFlowExits();
+const flowTypes = new Map();
+flowRoutes.forEach(route => route.points.forEach(([r, c]) => {
+  const key = `${r},${c}`;
+  if (!flowTypes.has(key)) flowTypes.set(key, route.type);
+}));
 
 const levels = [
   {
-    title: '任務一：二氧化碳過高，先去肺臟',
-    story: '你剛從組織回到心臟，血液中的 CO2 偏高。必須先到肺臟完成氣體交換，變成含氧血後，才能把氧氣送到肌肉。',
-    cargo: ['起始狀態：CO2 偏高', '必經器官：肺臟', '目的地：肌肉'],
-    route: ['L', 'M'],
-    start: 'H',
+    title: '任務一：肌肉的 CO2 回收',
+    story: '肌肉回流的血液 CO2 偏高。先回到右心、送往肺臟交換，再經左心把含氧血送回肌肉。',
+    cargo: ['起始狀態：CO2 偏高', '肺循環：右心→肺臟→左心', '目的地：肌肉'],
+    route: ['R', 'L', 'H', 'M'],
+    start: 'M',
     timeLimit: 55,
     goals: ['理解 CO2 偏高時要先經肺臟氣體交換', '建立肺臟取得氧氣、肌肉消耗氧氣的路徑概念'],
-    status: ['CO2 偏高', '含氧血', '氧氣送達肌肉'],
+    status: ['CO2 偏高', '回到右心', '肺臟完成交換', '左心送出含氧血', '氧氣送達肌肉'],
     moving: ['co2', 'plaque', 'glucose']
   },
   {
     title: '任務二：早餐養分送往大腦',
-    story: '早餐被消化後，先到小腸吸收葡萄糖與胺基酸，再經過肝臟調節，最後供應大腦。',
-    cargo: ['取得：葡萄糖', '取得：胺基酸', '目的地：大腦'],
-    route: ['I', 'V', 'B'],
-    start: 'H',
+    story: '小腸吸收的養分會先走肝門靜脈到肝臟調節，再回到右心、經肺臟與左心後供應大腦。',
+    cargo: ['起點：小腸吸收養分', '必經：肝臟調節', '目的地：大腦'],
+    route: ['V', 'R', 'L', 'H', 'B'],
+    start: 'I',
     timeLimit: 65,
     goals: ['知道小腸負責吸收葡萄糖與胺基酸', '理解肝臟可調節養分再供應大腦'],
-    status: ['空車血液', '載入養分', '肝臟調節完成', '大腦獲得能量'],
+    status: ['養分已吸收', '肝臟調節完成', '回到右心', '肺臟完成交換', '左心送出血液', '大腦獲得能量'],
     moving: ['pathogen', 'amino', 'plaque']
   },
   {
-    title: '任務三：運動後的廢物處理',
-    story: '肌肉活動後產生代謝廢物。從肌肉出發，先到肝臟處理含氮廢物，再到腎臟完成過濾。',
-    cargo: ['起點：肌肉', '處理：肝臟', '排除：腎臟'],
-    route: ['V', 'K'],
+    title: '任務三：腎臟過濾血液',
+    story: '肌肉回流的血液先回到右心、經肺臟完成氣體交換，再由左心經腎動脈送到腎臟過濾。',
+    cargo: ['起點：肌肉', '肺循環後回左心', '目的地：腎臟'],
+    route: ['R', 'L', 'H', 'K'],
     start: 'M',
     timeLimit: 55,
-    goals: ['理解肌肉活動會產生代謝廢物', '認識肝臟形成尿素、腎臟過濾排除的先後關係'],
-    status: ['代謝廢物增加', '尿素形成', '腎臟過濾完成'],
+    goals: ['理解肌肉回流血需先通過心肺循環', '認識腎臟由全身動脈血供應並進行過濾'],
+    status: ['代謝物增加', '回到右心', '肺臟完成交換', '左心送出血液', '腎臟過濾完成'],
     moving: ['toxin', 'co2', 'glucose']
   },
   {
     title: '任務四：大腦需要氧氣與葡萄糖',
-    story: '大腦不能缺氧，也需要葡萄糖。先到肺臟補氧，再到小腸載入葡萄糖，最後送往大腦。',
-    cargo: ['先取得：氧氣', '再取得：葡萄糖', '目的地：大腦'],
-    route: ['L', 'I', 'B'],
-    start: 'H',
+    story: '大腦缺氧時，回流血必須先經右心到肺臟補氧，再由左心進入體循環送回大腦。',
+    cargo: ['起點：大腦缺氧回流', '肺循環補氧', '目的地：大腦'],
+    route: ['R', 'L', 'H', 'B'],
+    start: 'B',
     timeLimit: 70,
-    goals: ['比較氧氣與葡萄糖對大腦供能的重要性', '練習先補氧、再補養分、最後送達目的器官的路線判斷'],
-    status: ['等待補給', '氧氣充足', '氧氣與葡萄糖齊備', '供應大腦完成'],
+    goals: ['比較缺氧血與含氧血的路徑差異', '理解大腦不能由靜脈血直接獲得氧氣'],
+    status: ['缺氧回流', '回到右心', '氧氣充足', '左心送出含氧血', '供應大腦完成'],
     moving: ['pathogen', 'toxin', 'amino']
   },
   {
     title: '任務五：供應運動中的肌肉',
-    story: '肌肉正在快速收縮，需要葡萄糖和氧氣。先到小腸載入養分，再到肺臟補氧，最後前往肌肉。',
-    cargo: ['載入：葡萄糖', '補充：氧氣', '目的地：肌肉'],
-    route: ['I', 'L', 'M'],
-    start: 'H',
+    story: '小腸吸收的葡萄糖先到肝臟調節，接著回到右心、經肺循環補氧，最後由左心送往肌肉。',
+    cargo: ['起點：小腸養分', '肝門循環：小腸→肝臟', '目的地：肌肉'],
+    route: ['V', 'R', 'L', 'H', 'M'],
+    start: 'I',
     timeLimit: 70,
     goals: ['統整細胞呼吸需要氧氣與葡萄糖', '理解小腸、肺臟、肌肉在供能任務中的角色分工'],
-    status: ['準備補給', '養分充足', '氧氣與養分齊備', '肌肉供能完成'],
+    status: ['養分已吸收', '肝臟調節完成', '回到右心', '肺臟完成交換', '左心送出補給', '肌肉供能完成'],
     moving: ['plaque', 'co2', 'toxin', 'glucose']
   },
   {
     title: '任務六：血糖調節與能量配送',
-    story: '血糖偏高時，先到小腸確認吸收來源，再到肝臟調節養分，最後把能量送到肌肉使用。',
-    cargo: ['確認：小腸吸收', '調節：肝臟', '目的地：肌肉'],
-    route: ['I', 'V', 'M'],
-    start: 'H',
+    story: '血糖調節要先經小腸到肝臟的肝門循環；調節後的血液回心、過肺，再由左心送往肌肉。',
+    cargo: ['起點：小腸吸收', '調節：肝臟', '目的地：肌肉'],
+    route: ['V', 'R', 'L', 'H', 'M'],
+    start: 'I',
     timeLimit: 68,
     goals: ['認識小腸吸收與血糖來源的關係', '理解肝臟調節養分後再送往組織使用'],
-    status: ['血糖等待調節', '養分來源確認', '肝臟調節完成', '肌肉取得能量'],
+    status: ['養分已吸收', '肝臟調節完成', '回到右心', '肺臟完成交換', '左心送出血液', '肌肉取得能量'],
     moving: ['glucose', 'plaque', 'pathogen', 'toxin']
   },
   {
     title: '任務七：水分鹽類平衡危機',
-    story: '身體流汗後水分與鹽類需要調節。先到腎臟維持體液平衡，再把穩定血流送往大腦。',
-    cargo: ['調節：水分與鹽類', '維持：大腦供應'],
-    route: ['K', 'B'],
-    start: 'H',
+    story: '腎臟完成水分與鹽類調節後，血液仍需回到右心、經肺循環，再由左心供應大腦。',
+    cargo: ['起點：腎臟調節完成', '肺循環後回左心', '目的地：大腦'],
+    route: ['R', 'L', 'H', 'B'],
+    start: 'K',
     timeLimit: 58,
-    goals: ['認識腎臟在水分與鹽類平衡中的角色', '理解體液平衡會影響大腦等器官的穩定供應'],
-    status: ['體液平衡待調整', '腎臟調節完成', '大腦供應穩定'],
+    goals: ['認識腎臟在水分與鹽類平衡中的角色', '理解器官靜脈血必須回右心後才能再供應大腦'],
+    status: ['腎臟調節完成', '回到右心', '肺臟完成交換', '左心送出血液', '大腦供應穩定'],
     moving: ['toxin', 'co2', 'plaque', 'amino']
   },
   {
     title: '最終任務：全身循環壓力測驗',
-    story: '巡邏物變多，時間更緊。從肌肉帶走 CO2，到肺臟交換氣體，再補充小腸養分，經肝臟調節後供應大腦。',
-    cargo: ['帶走：CO2', '補充：氧氣與葡萄糖', '最終供應：大腦'],
-    route: ['L', 'I', 'V', 'B'],
-    start: 'M',
+    story: '從小腸帶著養分經肝門靜脈到肝臟，再回到右心、肺臟、左心，最後把氧氣與養分供應大腦。',
+    cargo: ['小腸吸收：養分', '肝門循環：先到肝臟', '最終供應：大腦'],
+    route: ['V', 'R', 'L', 'H', 'B'],
+    start: 'I',
     timeLimit: 85,
     goals: ['整合肺臟、小腸、肝臟、大腦之間的循環運輸路徑', '在限時與巡邏物壓力下判斷正確器官順序'],
-    status: ['運動後待回收', '肺臟完成氣體交換', '小腸載入養分', '肝臟完成調節', '大腦供應完成'],
+    status: ['養分已吸收', '肝臟完成調節', '回到右心', '肺臟完成氣體交換', '左心送出含氧血', '大腦供應完成'],
     moving: ['co2', 'toxin', 'pathogen', 'plaque', 'glucose']
   }
 ];
@@ -275,7 +308,7 @@ let state = {
   level: 0,
   score: 0,
   lives: 3,
-  pos: { r: 5, c: 6 },
+  pos: { r: 8, c: 6 },
   step: 0,
   correct: 0,
   total: 0,
@@ -306,7 +339,7 @@ function startGame() {
     level: 0,
     score: 0,
     lives: 3,
-    pos: { r: 5, c: 6 },
+    pos: { r: 8, c: 6 },
     step: 0,
     correct: 0,
     total: 0,
@@ -382,19 +415,19 @@ function findOrgan(code) {
     const c = mazeMap[r].indexOf(code);
     if (c >= 0) return { r, c };
   }
-  return { r: 5, c: 6 };
+  return { r: 8, c: 6 };
 }
 
 function makeMovers(level) {
   const patrolKinds = ['parasite', 'plasmodium', ...level.moving];
+  const cells = [...flowExits.keys()]
+    .map(key => key.split(',').map(Number))
+    .filter(([r, c]) => !organCells.has(mazeMap[r][c]));
   return patrolKinds.map((kind, index) => ({
     ...moverKinds[kind],
     kind,
-    r: moverSpawns[index].r,
-    c: moverSpawns[index].c,
-    dr: moverSpawns[index].dr,
-    dc: moverSpawns[index].dc,
-    randomWalk: kind === 'parasite' || kind === 'plasmodium'
+    r: cells[(index * 11 + 4) % cells.length][0],
+    c: cells[(index * 11 + 4) % cells.length][1]
   }));
 }
 
@@ -411,7 +444,7 @@ function walkableCells() {
   const cells = [];
   mazeMap.forEach((row, r) => {
     [...row].forEach((ch, c) => {
-      if (isMoverPath(r, c) && !blocked.has(`${r},${c}`)) cells.push({ r, c });
+      if (isSpawnPath(r, c) && !blocked.has(`${r},${c}`)) cells.push({ r, c });
     });
   });
   return cells;
@@ -453,6 +486,16 @@ function render() {
     [...row].forEach((ch, c) => {
       const cell = document.createElement('div');
       cell.className = `cell ${ch === '#' ? 'wall' : 'path'}`;
+      const flowType = flowTypes.get(`${r},${c}`);
+      if (flowType) cell.classList.add(`flow-${flowType}`);
+
+      const exits = flowExits.get(`${r},${c}`) || [];
+      if (ch !== '#' && exits.length) {
+        const arrow = document.createElement('span');
+        arrow.className = 'flow-arrow';
+        arrow.textContent = flowArrow(r, c, exits[0]);
+        cell.appendChild(arrow);
+      }
 
       if (organCells.has(ch)) {
         const organ = organInfo[ch];
@@ -531,7 +574,9 @@ function currentExpectedOrgan() {
 function describePosition() {
   const ch = mazeMap[state.pos.r][state.pos.c];
   if (organCells.has(ch)) return organInfo[ch].name;
-  return `血管通道 ${state.pos.r + 1}-${state.pos.c + 1}`;
+  const type = flowTypes.get(`${state.pos.r},${state.pos.c}`);
+  const label = type === 'pulmonary' ? '肺循環血管' : type === 'portal' ? '肝門靜脈路徑' : '體循環血管';
+  return label;
 }
 
 function updateKnowledge(code) {
@@ -569,7 +614,11 @@ function move(dr, dc) {
   const nr = state.pos.r + dr;
   const nc = state.pos.c + dc;
   if (!isWalkable(nr, nc)) {
-    bump('血管壁擋住了，換一條路！');
+    bump('這裡沒有血管通道，請沿著箭頭前進。');
+    return;
+  }
+  if (!isFlowMoveAllowed(state.pos, nr, nc)) {
+    bump('血液不能逆流。請依血管箭頭與心臟瓣膜方向前進！');
     return;
   }
 
@@ -591,6 +640,20 @@ function move(dr, dc) {
 
 function isWalkable(r, c) {
   return r >= 0 && c >= 0 && r < mazeMap.length && c < mazeMap[0].length && mazeMap[r][c] !== '#';
+}
+
+function isFlowMoveAllowed(from, r, c) {
+  return (flowExits.get(`${from.r},${from.c}`) || []).some(exit => exit.r === r && exit.c === c);
+}
+
+function isSpawnPath(r, c) {
+  return isWalkable(r, c) && !organCells.has(mazeMap[r][c]) && flowExits.has(`${r},${c}`);
+}
+
+function flowArrow(r, c, exit) {
+  if (exit.r < r) return '↑';
+  if (exit.r > r) return '↓';
+  return exit.c < c ? '←' : '→';
 }
 
 function visitOrgan(code) {
@@ -648,43 +711,20 @@ function completeLevel() {
 
 function moveHazards() {
   state.movers.forEach(mover => {
-    if (mover.randomWalk) {
-      moveRandomWalker(mover);
-      return;
-    }
-    let nr = mover.r + mover.dr;
-    let nc = mover.c + mover.dc;
-    if (!isMoverPath(nr, nc)) {
-      mover.dr *= -1;
-      mover.dc *= -1;
-      nr = mover.r + mover.dr;
-      nc = mover.c + mover.dc;
-    }
-    if (isMoverPath(nr, nc)) {
-      mover.r = nr;
-      mover.c = nc;
-    }
+    const exits = (flowExits.get(`${mover.r},${mover.c}`) || []).filter(exit => isWalkable(exit.r, exit.c));
+    if (!exits.length) return;
+    const next = randomItem(exits);
+    mover.r = next.r;
+    mover.c = next.c;
   });
 }
 
 function moveRandomWalker(mover) {
-  const options = [
-    { dr: -1, dc: 0 },
-    { dr: 1, dc: 0 },
-    { dr: 0, dc: -1 },
-    { dr: 0, dc: 1 }
-  ].filter(dir => isMoverPath(mover.r + dir.dr, mover.c + dir.dc));
-  if (!options.length) return;
-  const forward = options.find(dir => dir.dr === mover.dr && dir.dc === mover.dc);
-  const next = forward && Math.random() > 0.62 ? forward : randomItem(options);
-  mover.dr = next.dr;
-  mover.dc = next.dc;
-  mover.r += mover.dr;
-  mover.c += mover.dc;
+  moveHazards();
 }
 
 function isMoverPath(r, c) {
-  return isWalkable(r, c) && !organCells.has(mazeMap[r][c]);
+  return isWalkable(r, c) && flowExits.has(`${r},${c}`);
 }
 
 function checkMoverCollision() {
@@ -815,7 +855,7 @@ function hint() {
   if (!expected) return;
   const next = findOrgan(expected);
   const direction = firstStepToward(state.pos, next);
-  $('feedback').textContent = `提示：下一個正確器官是${organInfo[expected].name}，可以先往${direction}探索。`;
+  $('feedback').textContent = `提示：下一個正確站點是${organInfo[expected].name}，請順著血管箭頭往${direction}前進。`;
   updateHUD();
 }
 
@@ -832,13 +872,14 @@ function firstStepToward(start, goal) {
   while (queue.length) {
     const node = queue.shift();
     if (node.r === goal.r && node.c === goal.c) return node.path[0] || '附近';
-    dirs.forEach(dir => {
-      const nr = node.r + dir.dr;
-      const nc = node.c + dir.dc;
+    (flowExits.get(`${node.r},${node.c}`) || []).forEach(exit => {
+      const nr = exit.r;
+      const nc = exit.c;
       const key = `${nr},${nc}`;
       if (!seen.has(key) && isWalkable(nr, nc)) {
         seen.add(key);
-        queue.push({ r: nr, c: nc, path: [...node.path, dir.label] });
+        const label = nr < node.r ? '上方' : nr > node.r ? '下方' : nc < node.c ? '左方' : '右方';
+        queue.push({ r: nr, c: nc, path: [...node.path, label] });
       }
     });
   }
