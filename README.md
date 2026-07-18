@@ -30,12 +30,15 @@ python -m http.server 8000
 
 ## 部署到 GitHub Pages
 
-1. 在 GitHub 建立新的 Repository，例如 `circulation-maze`。
-2. 上傳本專案所有檔案到儲存庫根目錄。
-3. 進入 **Settings → Pages**。
-4. Source 選擇 **Deploy from a branch**。
-5. Branch 選擇 `main`，資料夾選 `/ (root)`，再按 **Save**。
-6. 等待 GitHub 完成部署後，即可取得公開網址。
+本專案已部署於 GitHub Pages：
+
+https://educatres.github.io/circulation-maze/
+
+GitHub Repository：
+
+https://github.com/educatres/circulation-maze
+
+部署設定為 `main` 分支的 `/ (root)` 目錄。
 
 ## 教師使用建議
 
