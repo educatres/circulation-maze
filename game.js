@@ -1,34 +1,460 @@
-const levels = [
- {title:'任務一：肺部補氧',story:'你是剛從身體組織回到心臟的紅血球。前往肺部，排出二氧化碳並取得氧氣。',cargo:['送出：二氧化碳','取得：氧氣'],target:'肺',icon:'🫁',fact:'肺泡外圍布滿微血管。二氧化碳由血液進入肺泡，氧氣由肺泡進入血液。',map:[
- 'S...#...G','###.#.#.#','...?.#...','.#.###.#.','.#.....#.','.#.###.#.','...#...#.','!###.#...','.....#..T'],
- quizzes:[{q:'血液在肺部最主要完成哪一組交換？',o:['送出氧氣、取得二氧化碳','送出二氧化碳、取得氧氣','送出葡萄糖、取得尿素','只交換水分'],a:1,e:'肺部氣體交換使血液排出二氧化碳並獲得氧氣。'}]},
- {title:'任務二：小腸載入養分',story:'早餐消化完成了！前往小腸微血管，載入可被細胞利用的養分。',cargo:['取得：葡萄糖','取得：胺基酸'],target:'小腸',icon:'🌀',fact:'小腸內壁有許多絨毛，可增加吸收面積。葡萄糖與胺基酸會進入血液。',map:[
- 'S#......T','.#.####.#','...?...#','#####.#.#','.....#...','.#.#####.','.#.....#.','.###.#.#.','G...!#...'],
- quizzes:[{q:'哪一組養分可由小腸吸收進入血液？',o:['澱粉與蛋白質大分子','葡萄糖與胺基酸','膽汁與胃酸','氧氣與二氧化碳'],a:1,e:'醣類與蛋白質需先消化成較小分子，如葡萄糖和胺基酸。'}]},
- {title:'任務三：送能量到肌肉',story:'腿部肌肉正在運動，需要細胞呼吸的原料。請把正確物質送達。',cargo:['送出：氧氣','送出：葡萄糖','帶走：二氧化碳'],target:'肌肉',icon:'💪',fact:'肌肉細胞利用氧氣與葡萄糖釋放能量，並產生二氧化碳。運動越激烈，需求通常越高。',map:[
- 'S....#..G','####.#.#.','...?.#.#.','.#.###.#.','.#.....#.','.#####.#.','.....#.#.','.###.#...','!....###T'],
- quizzes:[{q:'肌肉細胞進行細胞呼吸時，最需要哪兩種原料？',o:['氧氣與葡萄糖','二氧化碳與尿素','胺基酸與尿素','水與膽汁'],a:0,e:'氧氣與葡萄糖是細胞呼吸的重要原料，可釋放細胞活動所需能量。'}]},
- {title:'任務四：肝腎廢物處理線',story:'蛋白質代謝後產生含氮廢物。先理解肝臟的處理，再前往腎臟完成清除。',cargo:['運送：尿素','調節：水與鹽類'],target:'腎臟',icon:'🫘',fact:'肝臟將有毒的氨轉為尿素；尿素隨血液抵達腎臟，被過濾後形成尿液的一部分。',map:[
- 'S..#....T','.#.#.####','.#...?...','.#####.#.','.....#.#.','###..#.#.','G.#.##.#.','..#....#.','..!###...'],
- quizzes:[{q:'尿素的主要處理路徑是哪一個？',o:['肺製造，腎臟吸收','肝臟形成，腎臟排除','小腸形成，心臟排除','腦形成，肺排除'],a:1,e:'肝臟把氨轉成尿素，尿素經血液運到腎臟後排出。'}]},
- {title:'最終任務：全身循環總整理',story:'腦部需要穩定供應氧氣與葡萄糖。請完成最後運輸，並判斷正確循環觀念。',cargo:['送出：氧氣','送出：葡萄糖','帶走：二氧化碳'],target:'腦',icon:'🧠',fact:'腦細胞需要持續的氧氣與葡萄糖。血流中斷會快速影響神經細胞功能。',map:[
- 'S..#....G','.#.#.##.#','.#.?....#','.#####.##','.....#...','###..###.','...#.....','.#.#####.','!#......T'],
- quizzes:[{q:'物質與組織細胞大量交換，主要發生在哪種血管？',o:['主動脈','大靜脈','微血管','冠狀動脈'],a:2,e:'微血管管壁薄、分布廣，是血液與組織細胞交換物質的主要場所。'}]}
+const organInfo = {
+  H: { name: '心臟', icon: '❤️', fact: '心臟像幫浦推動血液，是全身循環與肺循環的出發站。' },
+  L: { name: '肺臟', icon: '🫁', fact: '肺泡周圍的微血管讓血液排出二氧化碳、取得氧氣。' },
+  I: { name: '小腸', icon: '🌀', fact: '小腸絨毛增加吸收面積，葡萄糖與胺基酸會進入血液。' },
+  V: { name: '肝臟', icon: '🟤', fact: '肝臟調節養分，也能把有毒的氨轉成較容易排除的尿素。' },
+  K: { name: '腎臟', icon: '🫘', fact: '腎臟過濾血液，把尿素、多餘水分與鹽類形成尿液排出。' },
+  B: { name: '大腦', icon: '🧠', fact: '大腦需要穩定供應氧氣與葡萄糖，才能維持神經活動。' },
+  M: { name: '肌肉', icon: '💪', fact: '肌肉細胞使用氧氣與葡萄糖產生能量，並製造二氧化碳等代謝物。' }
+};
+
+const organCells = new Set(Object.keys(organInfo));
+
+const mazeMap = [
+  '###############',
+  '#B...#...L...K#',
+  '#.##.#.#.#.##.#',
+  '#....#.#.#....#',
+  '#.####.#.####.#',
+  '#.....H.......#',
+  '###.##.#.##.###',
+  '#....#.#.#....#',
+  '#.##.#.#.#.##.#',
+  '#I...#...V...M#',
+  '#.###.###.###.#',
+  '#.....#.#.....#',
+  '###.#.....#.###',
+  '#.............#',
+  '###############'
 ];
-const organFacts={S:['心臟','❤️','心臟收縮推動血液，是循環系統的動力來源。'],G:['知識閘門','❓','答對問題，才能證明你選擇了正確的運輸策略。'],T:['目標器官','🏁','抵達前仍要確認你攜帶的物質是否符合器官需求。'], '!':['錯誤路線','⚠️','錯誤血管可能讓運輸任務延誤，會扣分並返回上一步。'],'.':['微血管通道','🩸','血液透過血管流動；微血管是物質交換的重要場所。']};
-let state={level:0,score:0,lives:3,pos:{r:0,c:0},gateDone:false,streak:0,correct:0,total:0,reviews:[],locked:false};
-const $=id=>document.getElementById(id);
-const screens=['introScreen','gameScreen','resultScreen'];
-function showScreen(id){screens.forEach(s=>$(s).classList.toggle('active',s===id));}
-function startGame(){state={level:0,score:0,lives:3,pos:{r:0,c:0},gateDone:false,streak:0,correct:0,total:0,reviews:[],locked:false};showScreen('gameScreen');loadLevel();}
-function loadLevel(){const L=levels[state.level];state.gateDone=false;state.locked=false;for(let r=0;r<L.map.length;r++){const c=L.map[r].indexOf('S');if(c>=0)state.pos={r,c};}$('missionTitle').textContent=L.title;$('missionStory').textContent=L.story;$('cargoList').innerHTML=L.cargo.map(x=>`<span class="cargo-chip">${x}</span>`).join('');$('organName').textContent=L.target;$('organIcon').textContent=L.icon;$('organFact').textContent=L.fact;$('feedback').textContent='找到知識閘門並抵達目標器官。';render();updateHUD();}
-function render(){const L=levels[state.level],maze=$('maze');maze.style.gridTemplateColumns=`repeat(${L.map[0].length},1fr)`;maze.innerHTML='';L.map.forEach((row,r)=>[...row].forEach((ch,c)=>{const d=document.createElement('div');d.className='cell '+(ch==='#'?'wall':'path');if(ch==='G'){d.classList.add('gate');d.textContent=state.gateDone?'✅':'❓'}if(ch==='T'){d.classList.add('target');d.textContent='🏁'}if(ch==='S')d.textContent='🚩';if(ch==='!'){d.classList.add('danger');d.textContent='⚠️'}if(r===state.pos.r&&c===state.pos.c)d.classList.add('player');maze.appendChild(d)}));$('positionLabel').textContent=`第 ${state.pos.r+1} 列，第 ${state.pos.c+1} 格`;$('gateLabel').textContent=state.gateDone?'1':'0';$('streakLabel').textContent=state.streak;}
-function updateHUD(){$('levelLabel').textContent=`${state.level+1}/${levels.length}`;$('scoreLabel').textContent=state.score;$('lifeLabel').textContent='❤'.repeat(state.lives)+'♡'.repeat(3-state.lives);}
-function move(dr,dc){if(state.locked)return;const L=levels[state.level],nr=state.pos.r+dr,nc=state.pos.c+dc;if(nr<0||nc<0||nr>=L.map.length||nc>=L.map[0].length||L.map[nr][nc]==='#'){bump('血管壁擋住了，換一條路！');return;}const ch=L.map[nr][nc];if(ch==='G'&&!state.gateDone){state.pos={r:nr,c:nc};render();openQuiz();return;}state.pos={r:nr,c:nc};if(ch==='!'){state.score=Math.max(0,state.score-8);state.lives--;state.streak=0;bump('走進錯誤路線：扣 8 分！');if(state.lives<=0){finish(false);return;}}else if(ch==='T'){if(!state.gateDone){bump('還沒通過知識閘門，不能完成運輸！');state.score=Math.max(0,state.score-3);}else{state.score+=20;state.reviews.push(`✅ ${L.title}：成功抵達${L.target}`);if(state.level===levels.length-1){finish(true);return;}state.level++;loadLevel();return;}}else{state.score+=1;const f=organFacts[ch]||organFacts['.'];$('organName').textContent=f[0];$('organIcon').textContent=f[1];$('organFact').textContent=f[2];}render();updateHUD();}
-function bump(msg){$('feedback').textContent=msg;$('maze').classList.remove('shake');void $('maze').offsetWidth;$('maze').classList.add('shake');updateHUD();}
-function openQuiz(){state.locked=true;const q=levels[state.level].quizzes[0];$('quizQuestion').textContent=q.q;$('quizOptions').innerHTML=q.o.map((o,i)=>`<label class="quiz-option"><input type="radio" name="answer" value="${i}"><span>${o}</span></label>`).join('');$('quizExplain').textContent='';$('quizExplain').className='quiz-explain';$('submitQuizBtn').classList.remove('hidden');$('continueQuizBtn').classList.add('hidden');$('quizDialog').showModal();}
-function submitQuiz(){const picked=document.querySelector('input[name="answer"]:checked');if(!picked){$('quizExplain').textContent='請先選擇一個答案。';return;}const q=levels[state.level].quizzes[0],ok=Number(picked.value)===q.a;state.total++;if(ok){state.correct++;state.score+=15+state.streak*2;state.streak++;state.gateDone=true;$('quizExplain').textContent='答對了！'+q.e;$('quizExplain').className='quiz-explain good';state.reviews.push(`✅ ${q.q}`)}else{state.score=Math.max(0,state.score-5);state.streak=0;state.lives--;$('quizExplain').textContent='答案不正確。'+q.e;$('quizExplain').className='quiz-explain bad';state.reviews.push(`❌ ${q.q}`);if(state.lives<=0){$('continueQuizBtn').textContent='查看結果';}}document.querySelectorAll('input[name="answer"]').forEach(x=>x.disabled=true);$('submitQuizBtn').classList.add('hidden');$('continueQuizBtn').classList.remove('hidden');updateHUD();}
-function continueQuiz(){$('quizDialog').close();state.locked=false;if(state.lives<=0){finish(false);return;}if(!state.gateDone){const L=levels[state.level];for(let r=0;r<L.map.length;r++){const c=L.map[r].indexOf('S');if(c>=0)state.pos={r,c};}$('feedback').textContent='答錯了，返回起點重新尋找閘門。';}render();}
-function finish(win){showScreen('resultScreen');const accuracy=state.total?Math.round(state.correct/state.total*100):0;$('resultIcon').textContent=win?'🏆':'🩹';$('resultTitle').textContent=win?'循環運輸大師！':'任務暫停，重新整備！';$('resultText').textContent=win?'你已完成肺循環、養分吸收、組織交換與廢物排除任務。':'生命值用完了。複習器官功能後，再挑戰一次。';$('finalScore').textContent=state.score;$('accuracy').textContent=accuracy+'%';$('completedLevels').textContent=`${win?levels.length:state.level}/${levels.length}`;$('reviewList').innerHTML='<h3>學習紀錄</h3>'+state.reviews.map(x=>`<div class="review-item">${x}</div>`).join('');}
-function hint(){if(state.score>=5)state.score-=5;const L=levels[state.level],target=state.gateDone?'T':'G';let best=null;for(let r=0;r<L.map.length;r++)for(let c=0;c<L.map[0].length;c++)if(L.map[r][c]===target)best={r,c};if(best){const vr=best.r-state.pos.r,vc=best.c-state.pos.c;$('feedback').textContent=`提示：${Math.abs(vr)>Math.abs(vc)?(vr>0?'往下方探索':'往上方探索'):(vc>0?'往右方探索':'往左方探索')}。`;}updateHUD();}
-$('startBtn').onclick=startGame;$('playAgainBtn').onclick=startGame;$('restartLevelBtn').onclick=()=>{state.score=Math.max(0,state.score-5);loadLevel();};$('hintBtn').onclick=hint;$('openGuideBtn').onclick=()=>$('guideDialog').showModal();$('submitQuizBtn').onclick=submitQuiz;$('continueQuizBtn').onclick=continueQuiz;document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>({up:()=>move(-1,0),down:()=>move(1,0),left:()=>move(0,-1),right:()=>move(0,1)})[b.dataset.dir]());addEventListener('keydown',e=>{const k=e.key.toLowerCase(),m={arrowup:[-1,0],w:[-1,0],arrowdown:[1,0],s:[1,0],arrowleft:[0,-1],a:[0,-1],arrowright:[0,1],d:[0,1]};if(m[k]){e.preventDefault();move(...m[k]);}});
+
+const levels = [
+  {
+    title: '任務一：二氧化碳過高，先去肺臟',
+    story: '你剛從組織回到心臟，血液中的 CO2 偏高。必須先到肺臟完成氣體交換，變成含氧血後，才能把氧氣送到肌肉。',
+    cargo: ['起始狀態：CO2 偏高', '必經器官：肺臟', '目的地：肌肉'],
+    route: ['L', 'M'],
+    start: 'H',
+    status: ['CO2 偏高', '含氧血', '氧氣送達肌肉'],
+    moving: ['co2', 'plaque', 'glucose']
+  },
+  {
+    title: '任務二：早餐養分送往大腦',
+    story: '早餐被消化後，先到小腸吸收葡萄糖與胺基酸，再經過肝臟調節，最後供應大腦。',
+    cargo: ['取得：葡萄糖', '取得：胺基酸', '目的地：大腦'],
+    route: ['I', 'V', 'B'],
+    start: 'H',
+    status: ['空車血液', '載入養分', '肝臟調節完成', '大腦獲得能量'],
+    moving: ['pathogen', 'amino', 'plaque']
+  },
+  {
+    title: '任務三：運動後的廢物處理',
+    story: '肌肉活動後產生代謝廢物。從肌肉出發，先到肝臟處理含氮廢物，再到腎臟完成過濾。',
+    cargo: ['起點：肌肉', '處理：肝臟', '排除：腎臟'],
+    route: ['V', 'K'],
+    start: 'M',
+    status: ['代謝廢物增加', '尿素形成', '腎臟過濾完成'],
+    moving: ['toxin', 'co2', 'glucose']
+  },
+  {
+    title: '任務四：大腦需要氧氣與葡萄糖',
+    story: '大腦不能缺氧，也需要葡萄糖。先到肺臟補氧，再到小腸載入葡萄糖，最後送往大腦。',
+    cargo: ['先取得：氧氣', '再取得：葡萄糖', '目的地：大腦'],
+    route: ['L', 'I', 'B'],
+    start: 'H',
+    status: ['等待補給', '氧氣充足', '氧氣與葡萄糖齊備', '供應大腦完成'],
+    moving: ['pathogen', 'toxin', 'amino']
+  },
+  {
+    title: '最終任務：供應運動中的肌肉',
+    story: '肌肉正在快速收縮，需要葡萄糖和氧氣。先到小腸載入養分，再到肺臟補氧，最後前往肌肉。',
+    cargo: ['載入：葡萄糖', '補充：氧氣', '目的地：肌肉'],
+    route: ['I', 'L', 'M'],
+    start: 'H',
+    status: ['準備補給', '養分充足', '氧氣與養分齊備', '肌肉供能完成'],
+    moving: ['plaque', 'co2', 'toxin', 'glucose']
+  }
+];
+
+const moverKinds = {
+  co2: { name: '二氧化碳團', icon: 'CO₂', message: '二氧化碳亂流讓血液運輸受阻；要到肺臟才是真正的氣體交換。' },
+  glucose: { name: '游離葡萄糖', icon: '糖', message: '游離養分撞上血球會干擾路線；吸收養分要走小腸微血管。' },
+  amino: { name: '胺基酸流', icon: '胺', message: '胺基酸在血管中移動，但任務要靠正確器官完成吸收與運送。' },
+  toxin: { name: '有害物質', icon: '毒', message: '有害物質會傷害血液運輸，請避開並前往肝腎處理路線。' },
+  pathogen: { name: '病原體', icon: '菌', message: '病原體阻礙循環任務，保持距離！' },
+  plaque: { name: '血管斑塊', icon: '脂', message: '血管斑塊讓通道變窄，碰到會讓任務延誤。' }
+};
+
+const moverSpawns = [
+  { r: 1, c: 3, dr: 0, dc: 1 },
+  { r: 3, c: 13, dr: 1, dc: 0 },
+  { r: 7, c: 1, dr: 0, dc: 1 },
+  { r: 11, c: 5, dr: 0, dc: -1 },
+  { r: 13, c: 11, dr: 0, dc: -1 }
+];
+
+let state = {
+  level: 0,
+  score: 0,
+  lives: 3,
+  pos: { r: 5, c: 6 },
+  step: 0,
+  correct: 0,
+  total: 0,
+  reviews: [],
+  movers: [],
+  locked: false,
+  timer: null
+};
+
+const $ = id => document.getElementById(id);
+const screens = ['introScreen', 'gameScreen', 'resultScreen'];
+
+function showScreen(id) {
+  screens.forEach(screen => $(screen).classList.toggle('active', screen === id));
+}
+
+function startGame() {
+  clearMoverLoop();
+  state = {
+    level: 0,
+    score: 0,
+    lives: 3,
+    pos: { r: 5, c: 6 },
+    step: 0,
+    correct: 0,
+    total: 0,
+    reviews: [],
+    movers: [],
+    locked: false,
+    timer: null
+  };
+  showScreen('gameScreen');
+  loadLevel();
+}
+
+function loadLevel() {
+  const level = levels[state.level];
+  state.step = 0;
+  state.locked = false;
+  state.pos = findOrgan(level.start);
+  state.movers = makeMovers(level);
+  $('missionTitle').textContent = level.title;
+  $('missionStory').textContent = level.story;
+  $('cargoList').innerHTML = level.cargo.map(item => `<span class="cargo-chip">${item}</span>`).join('');
+  $('feedback').textContent = `下一站：${organInfo[level.route[0]].name}。避開移動物質，選對器官通過。`;
+  updateKnowledge(level.start);
+  render();
+  updateHUD();
+  startMoverLoop();
+}
+
+function findOrgan(code) {
+  for (let r = 0; r < mazeMap.length; r++) {
+    const c = mazeMap[r].indexOf(code);
+    if (c >= 0) return { r, c };
+  }
+  return { r: 5, c: 6 };
+}
+
+function makeMovers(level) {
+  return level.moving.map((kind, index) => ({
+    ...moverKinds[kind],
+    kind,
+    r: moverSpawns[index].r,
+    c: moverSpawns[index].c,
+    dr: moverSpawns[index].dr,
+    dc: moverSpawns[index].dc
+  }));
+}
+
+function render() {
+  const maze = $('maze');
+  maze.style.gridTemplateColumns = `repeat(${mazeMap[0].length}, 1fr)`;
+  maze.innerHTML = '';
+  const expected = currentExpectedOrgan();
+
+  mazeMap.forEach((row, r) => {
+    [...row].forEach((ch, c) => {
+      const cell = document.createElement('div');
+      cell.className = `cell ${ch === '#' ? 'wall' : 'path'}`;
+
+      if (organCells.has(ch)) {
+        const organ = organInfo[ch];
+        cell.classList.add('organ-cell');
+        cell.dataset.label = organ.name;
+        cell.textContent = organ.icon;
+        const routeIndex = levels[state.level].route.indexOf(ch);
+        if (ch === expected) cell.classList.add('next-organ');
+        if (routeIndex >= 0 && routeIndex < state.step) cell.classList.add('organ-done');
+      }
+
+      const mover = state.movers.find(item => item.r === r && item.c === c);
+      if (mover) {
+        const marker = document.createElement('span');
+        marker.className = `mover mover-${mover.kind}`;
+        marker.textContent = mover.icon;
+        marker.title = mover.name;
+        cell.appendChild(marker);
+      }
+
+      if (state.pos.r === r && state.pos.c === c) {
+        cell.classList.add('player');
+      }
+
+      maze.appendChild(cell);
+    });
+  });
+
+  $('positionLabel').textContent = describePosition();
+  $('gateLabel').textContent = `${state.step}/${levels[state.level].route.length}`;
+  $('streakLabel').textContent = currentExpectedOrgan() ? organInfo[currentExpectedOrgan()].name : '完成';
+}
+
+function updateHUD() {
+  $('levelLabel').textContent = `${state.level + 1}/${levels.length}`;
+  $('scoreLabel').textContent = state.score;
+  $('lifeLabel').textContent = '❤'.repeat(state.lives) + '♡'.repeat(3 - state.lives);
+}
+
+function currentExpectedOrgan() {
+  return levels[state.level].route[state.step];
+}
+
+function describePosition() {
+  const ch = mazeMap[state.pos.r][state.pos.c];
+  if (organCells.has(ch)) return organInfo[ch].name;
+  return `血管通道 ${state.pos.r + 1}-${state.pos.c + 1}`;
+}
+
+function updateKnowledge(code) {
+  const info = organInfo[code] || {
+    name: '微血管通道',
+    icon: '🩸',
+    fact: '微血管是血液與組織細胞交換物質的重要場所。'
+  };
+  $('organName').textContent = info.name;
+  $('organIcon').textContent = info.icon;
+  $('organFact').textContent = info.fact;
+}
+
+function move(dr, dc) {
+  if (state.locked) return;
+  const nr = state.pos.r + dr;
+  const nc = state.pos.c + dc;
+  if (!isWalkable(nr, nc)) {
+    bump('血管壁擋住了，換一條路！');
+    return;
+  }
+
+  state.pos = { r: nr, c: nc };
+  const tile = mazeMap[nr][nc];
+  if (organCells.has(tile)) {
+    visitOrgan(tile);
+  } else {
+    state.score += 1;
+    updateKnowledge('.');
+  }
+
+  moveHazards();
+  checkMoverCollision();
+  render();
+  updateHUD();
+}
+
+function isWalkable(r, c) {
+  return r >= 0 && c >= 0 && r < mazeMap.length && c < mazeMap[0].length && mazeMap[r][c] !== '#';
+}
+
+function visitOrgan(code) {
+  updateKnowledge(code);
+  const level = levels[state.level];
+  const expected = currentExpectedOrgan();
+
+  if (!expected) return;
+  if (code === level.start && state.step === 0) {
+    $('feedback').textContent = `從${organInfo[code].name}出發，先找${organInfo[expected].name}。`;
+    return;
+  }
+
+  state.total++;
+  if (code === expected) {
+    state.correct++;
+    state.score += 18 + state.step * 4;
+    const statusText = level.status[state.step + 1] || '狀態更新';
+    state.step++;
+    state.reviews.push(`✅ ${level.title}：經過${organInfo[code].name}，${statusText}`);
+
+    if (state.step >= level.route.length) {
+      completeLevel();
+      return;
+    }
+
+    $('feedback').textContent = `正確！現在狀態：${statusText}。下一站：${organInfo[currentExpectedOrgan()].name}。`;
+    return;
+  }
+
+  state.lives--;
+  state.score = Math.max(0, state.score - 8);
+  state.reviews.push(`❌ ${level.title}：誤入${organInfo[code].name}，應先到${organInfo[expected].name}`);
+  bump(`路線不對：目前應先到${organInfo[expected].name}，不是${organInfo[code].name}。`);
+  if (state.lives <= 0) finish(false);
+}
+
+function completeLevel() {
+  const level = levels[state.level];
+  const finalStatus = level.status[level.status.length - 1];
+  state.score += 25;
+  state.reviews.push(`🏁 ${level.title}：${finalStatus}`);
+
+  if (state.level === levels.length - 1) {
+    finish(true);
+    return;
+  }
+
+  state.level++;
+  loadLevel();
+}
+
+function moveHazards() {
+  state.movers.forEach(mover => {
+    let nr = mover.r + mover.dr;
+    let nc = mover.c + mover.dc;
+    if (!isMoverPath(nr, nc)) {
+      mover.dr *= -1;
+      mover.dc *= -1;
+      nr = mover.r + mover.dr;
+      nc = mover.c + mover.dc;
+    }
+    if (isMoverPath(nr, nc)) {
+      mover.r = nr;
+      mover.c = nc;
+    }
+  });
+}
+
+function isMoverPath(r, c) {
+  return isWalkable(r, c) && !organCells.has(mazeMap[r][c]);
+}
+
+function checkMoverCollision() {
+  const hit = state.movers.find(mover => mover.r === state.pos.r && mover.c === state.pos.c);
+  if (!hit) return;
+  state.lives--;
+  state.score = Math.max(0, state.score - 10);
+  state.pos = findOrgan(levels[state.level].start);
+  state.reviews.push(`⚠️ ${levels[state.level].title}：碰到${hit.name}`);
+  bump(hit.message + ' 回到起點重新規劃路線。');
+  if (state.lives <= 0) finish(false);
+}
+
+function startMoverLoop() {
+  clearMoverLoop();
+  state.timer = setInterval(() => {
+    if (state.locked || !document.getElementById('gameScreen').classList.contains('active')) return;
+    moveHazards();
+    checkMoverCollision();
+    render();
+    updateHUD();
+  }, 900);
+}
+
+function clearMoverLoop() {
+  if (state.timer) clearInterval(state.timer);
+}
+
+function bump(message) {
+  $('feedback').textContent = message;
+  $('maze').classList.remove('shake');
+  void $('maze').offsetWidth;
+  $('maze').classList.add('shake');
+  updateHUD();
+}
+
+function finish(win) {
+  clearMoverLoop();
+  showScreen('resultScreen');
+  const accuracy = state.total ? Math.round((state.correct / state.total) * 100) : 0;
+  $('resultIcon').textContent = win ? '🏆' : '🩹';
+  $('resultTitle').textContent = win ? '循環運輸大師！' : '任務暫停，重新整備！';
+  $('resultText').textContent = win
+    ? '你已完成肺部氣體交換、養分吸收、肝臟處理、腎臟排除與組織供應任務。'
+    : '生命值用完了。複習器官功能與任務順序後，再挑戰一次。';
+  $('finalScore').textContent = state.score;
+  $('accuracy').textContent = accuracy + '%';
+  $('completedLevels').textContent = `${win ? levels.length : state.level}/${levels.length}`;
+  $('reviewList').innerHTML = '<h3>學習紀錄</h3>' + state.reviews.map(item => `<div class="review-item">${item}</div>`).join('');
+}
+
+function hint() {
+  if (state.score >= 5) state.score -= 5;
+  const expected = currentExpectedOrgan();
+  if (!expected) return;
+  const next = findOrgan(expected);
+  const direction = firstStepToward(state.pos, next);
+  $('feedback').textContent = `提示：下一個正確器官是${organInfo[expected].name}，可以先往${direction}探索。`;
+  updateHUD();
+}
+
+function firstStepToward(start, goal) {
+  const queue = [{ ...start, path: [] }];
+  const seen = new Set([`${start.r},${start.c}`]);
+  const dirs = [
+    { dr: -1, dc: 0, label: '上方' },
+    { dr: 1, dc: 0, label: '下方' },
+    { dr: 0, dc: -1, label: '左方' },
+    { dr: 0, dc: 1, label: '右方' }
+  ];
+
+  while (queue.length) {
+    const node = queue.shift();
+    if (node.r === goal.r && node.c === goal.c) return node.path[0] || '附近';
+    dirs.forEach(dir => {
+      const nr = node.r + dir.dr;
+      const nc = node.c + dir.dc;
+      const key = `${nr},${nc}`;
+      if (!seen.has(key) && isWalkable(nr, nc)) {
+        seen.add(key);
+        queue.push({ r: nr, c: nc, path: [...node.path, dir.label] });
+      }
+    });
+  }
+
+  return '附近';
+}
+
+$('startBtn').onclick = startGame;
+$('playAgainBtn').onclick = startGame;
+$('restartLevelBtn').onclick = () => {
+  state.score = Math.max(0, state.score - 5);
+  loadLevel();
+};
+$('hintBtn').onclick = hint;
+$('openGuideBtn').onclick = () => $('guideDialog').showModal();
+
+document.querySelectorAll('[data-dir]').forEach(button => {
+  button.onclick = () => ({
+    up: () => move(-1, 0),
+    down: () => move(1, 0),
+    left: () => move(0, -1),
+    right: () => move(0, 1)
+  })[button.dataset.dir]();
+});
+
+addEventListener('keydown', event => {
+  const key = event.key.toLowerCase();
+  const moves = {
+    arrowup: [-1, 0],
+    w: [-1, 0],
+    arrowdown: [1, 0],
+    s: [1, 0],
+    arrowleft: [0, -1],
+    a: [0, -1],
+    arrowright: [0, 1],
+    d: [0, 1]
+  };
+  if (moves[key]) {
+    event.preventDefault();
+    move(...moves[key]);
+  }
+});

@@ -59,8 +59,9 @@
         </div>
         <div class="legend">
           <h3>地圖圖示</h3>
-          <p><span>🚩</span>起點　<span>🏁</span>目標器官</p>
-          <p><span>❓</span>知識閘門　<span>⚠️</span>錯誤路線</p>
+          <p><span>❤️</span>心臟　<span>🫁</span>肺臟　<span>🌀</span>小腸</p>
+          <p><span>🟤</span>肝臟　<span>🫘</span>腎臟　<span>🧠</span>大腦　<span>💪</span>肌肉</p>
+          <p><span>CO₂</span><span>糖</span><span>毒</span>移動物質：請避開</p>
         </div>
         <button id="restartLevelBtn" class="secondary small">重新挑戰本關</button>
       </aside>
@@ -84,8 +85,8 @@
         <p id="organFact">血液負責運輸物質；真正大量交換物質的地方通常是微血管。</p>
         <div class="status-list">
           <p><span>目前位置</span><b id="positionLabel">起點</b></p>
-          <p><span>已通過閘門</span><b id="gateLabel">0</b></p>
-          <p><span>連續答對</span><b id="streakLabel">0</b></p>
+          <p><span>任務進度</span><b id="gateLabel">0/0</b></p>
+          <p><span>下一器官</span><b id="streakLabel">肺臟</b></p>
         </div>
       </aside>
     </section>
@@ -97,7 +98,7 @@
         <p id="resultText"></p>
         <div class="result-grid">
           <article><span>總分</span><b id="finalScore">0</b></article>
-          <article><span>答對率</span><b id="accuracy">0%</b></article>
+          <article><span>正確路線</span><b id="accuracy">0%</b></article>
           <article><span>完成關卡</span><b id="completedLevels">0/5</b></article>
         </div>
         <div id="reviewList" class="review-list"></div>
@@ -132,7 +133,7 @@
         <article><span>🫘</span><h3>腎臟</h3><p>過濾血液，移除尿素及多餘水分與鹽類，形成尿液。</p></article>
         <article><span>🧠</span><h3>腦與肌肉</h3><p>需要氧氣與葡萄糖進行細胞呼吸，並產生二氧化碳等代謝產物。</p></article>
       </div>
-      <p class="tip">操作：方向鍵／WASD／畫面按鈕。走到「❓」要答題，答對才可通過。</p>
+      <p class="tip">操作：方向鍵／WASD／畫面按鈕。依照任務狀態選擇正確器官，避開會移動的物質。</p>
     </form>
   </dialog>
 
