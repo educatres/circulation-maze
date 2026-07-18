@@ -463,13 +463,6 @@ function render() {
       if (flowType) cell.classList.add(`flow-${flowType}`);
 
       const exits = flowExits.get(`${r},${c}`) || [];
-      if (ch !== '#' && exits.length) {
-        const arrow = document.createElement('span');
-        arrow.className = 'flow-arrow';
-        arrow.textContent = flowArrow(r, c, exits[0]);
-        cell.appendChild(arrow);
-      }
-
       if (organCells.has(ch)) {
         const organ = organInfo[ch];
         cell.classList.add('organ-cell');
@@ -483,6 +476,15 @@ function render() {
         const routeIndex = levels[state.level].route.indexOf(ch);
         if (ch === expected) cell.classList.add('next-organ');
         if (routeIndex >= 0 && routeIndex < state.step) cell.classList.add('organ-done');
+      }
+
+      if (ch !== '#' && exits.length) {
+        const arrow = document.createElement('span');
+        arrow.className = `flow-arrow${exits.length > 1 ? ' flow-choice' : ''}`;
+        arrow.textContent = exits.map(exit => flowArrow(r, c, exit)).join('');
+        arrow.title = exits.length > 1 ? '血管分岔：選擇一個順流方向' : '血流方向';
+        if (exits.length > 1) cell.classList.add('flow-junction');
+        cell.appendChild(arrow);
       }
 
       const mover = state.movers.find(item => item.r === r && item.c === c);
@@ -522,6 +524,7 @@ function render() {
   $('positionLabel').textContent = describePosition();
   $('gateLabel').textContent = `${state.step}/${levels[state.level].route.length}`;
   $('streakLabel').textContent = currentExpectedOrgan() ? organInfo[currentExpectedOrgan()].name : '完成';
+  $('junctionLabel').textContent = describeJunction();
 }
 
 function updateHUD() {
@@ -595,6 +598,7 @@ function move(dr, dc) {
     return;
   }
 
+  const junctionMessage = evaluateJunctionChoice(state.pos, nr, nc);
   state.pos = { r: nr, c: nc };
   const tile = mazeMap[nr][nc];
   if (organCells.has(tile)) {
@@ -602,6 +606,7 @@ function move(dr, dc) {
   } else {
     state.score += 1;
     updateKnowledge('.');
+    if (junctionMessage) $('feedback').textContent = junctionMessage;
   }
 
   moveHazards();
@@ -627,6 +632,47 @@ function flowArrow(r, c, exit) {
   if (exit.r < r) return '↑';
   if (exit.r > r) return '↓';
   return exit.c < c ? '←' : '→';
+}
+
+function describeJunction() {
+  const exits = flowExits.get(`${state.pos.r},${state.pos.c}`) || [];
+  if (exits.length < 2) return '沿箭頭前進';
+  return `可選 ${exits.map(exit => flowArrow(state.pos.r, state.pos.c, exit)).join(' 或 ')}`;
+}
+
+function evaluateJunctionChoice(from, r, c) {
+  const exits = flowExits.get(`${from.r},${from.c}`) || [];
+  const expected = currentExpectedOrgan();
+  if (exits.length < 2 || !expected) return '';
+
+  const goal = findOrgan(expected);
+  const distances = exits.map(exit => flowDistance(exit, goal));
+  const shortest = Math.min(...distances);
+  const chosenIndex = exits.findIndex(exit => exit.r === r && exit.c === c);
+  if (!Number.isFinite(shortest) || chosenIndex < 0) return '';
+
+  if (distances[chosenIndex] === shortest) {
+    state.score += 5;
+    return `分岔判斷正確！選到通往${organInfo[expected].name}的較短血流路徑，+5 分。`;
+  }
+  return `選到較遠的血管支線，仍可順流前進，但會多花一些時間。`;
+}
+
+function flowDistance(start, goal) {
+  const queue = [{ ...start, distance: 0 }];
+  const seen = new Set([`${start.r},${start.c}`]);
+  while (queue.length) {
+    const node = queue.shift();
+    if (node.r === goal.r && node.c === goal.c) return node.distance;
+    (flowExits.get(`${node.r},${node.c}`) || []).forEach(exit => {
+      const key = `${exit.r},${exit.c}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        queue.push({ ...exit, distance: node.distance + 1 });
+      }
+    });
+  }
+  return Infinity;
 }
 
 function visitOrgan(code) {
