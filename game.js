@@ -267,24 +267,6 @@ const moverKinds = {
     text: '病原體包含細菌、病毒、寄生蟲等。若進入血液或組織，可能引發免疫反應，影響身體正常運輸。',
     refs: [['CDC：Infectious Diseases', 'https://www.cdc.gov/infectious-diseases/index.html']]
   },
-  parasite: {
-    name: '血液寄生蟲',
-    icon: '蟲',
-    message: '血液寄生蟲正在巡邏，碰到會讓紅血球受損並延誤任務。',
-    text: '有些寄生蟲會出現在血液中，甚至感染紅血球。遊戲用巡邏物表示它們會干擾血液運輸，學生要避開。',
-    refs: [['CDC：Babesiosis', 'https://www.cdc.gov/babesiosis/about/index.html']]
-  },
-  plasmodium: {
-    name: '瘧原蟲',
-    icon: '瘧',
-    message: '瘧原蟲會感染紅血球，碰到會造成嚴重干擾！',
-    text: '瘧原蟲是造成瘧疾的寄生蟲，會經由受感染蚊子傳播，並在人體肝臟與紅血球階段發育；紅血球階段和發病症狀關係密切。',
-    refs: [
-      ['CDC：About Malaria', 'https://www.cdc.gov/malaria/about/index.html'],
-      ['CDC DPDx：Malaria', 'https://www.cdc.gov/dpdx/malaria/index.html'],
-      ['WHO：Malaria Q&A', 'https://www.who.int/news-room/questions-and-answers/item/malaria']
-    ]
-  },
   plaque: {
     name: '血管斑塊',
     icon: '脂',
@@ -293,16 +275,6 @@ const moverKinds = {
     refs: [['CDC：Cholesterol', 'https://www.cdc.gov/cholesterol/about/index.html']]
   }
 };
-
-const moverSpawns = [
-  { r: 1, c: 3, dr: 0, dc: 1 },
-  { r: 3, c: 13, dr: 1, dc: 0 },
-  { r: 7, c: 1, dr: 0, dc: 1 },
-  { r: 11, c: 5, dr: 0, dc: -1 },
-  { r: 13, c: 11, dr: 0, dc: -1 },
-  { r: 13, c: 3, dr: 0, dc: 1 },
-  { r: 3, c: 1, dr: 1, dc: 0 }
-];
 
 let state = {
   level: 0,
@@ -419,7 +391,7 @@ function findOrgan(code) {
 }
 
 function makeMovers(level) {
-  const patrolKinds = ['parasite', 'plasmodium', ...level.moving];
+  const patrolKinds = level.moving;
   const cells = [...flowExits.keys()]
     .map(key => key.split(',').map(Number))
     .filter(([r, c]) => !organCells.has(mazeMap[r][c]));
@@ -479,6 +451,7 @@ function collectNutrient() {
 function render() {
   const maze = $('maze');
   maze.style.gridTemplateColumns = `repeat(${mazeMap[0].length}, 1fr)`;
+  maze.style.gridTemplateRows = `repeat(${mazeMap.length}, minmax(0, 1fr))`;
   maze.innerHTML = '';
   const expected = currentExpectedOrgan();
 
