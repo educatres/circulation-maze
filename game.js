@@ -147,7 +147,7 @@ const levels = [
     cargo: ['起始狀態：CO2 偏高', '肺循環：右心→肺臟→左心', '目的地：肌肉'],
     route: ['R', 'L', 'H', 'M'],
     start: 'M',
-    timeLimit: 55,
+    timeLimit: 110,
     goals: ['理解 CO2 偏高時要先經肺臟氣體交換', '建立肺臟取得氧氣、肌肉消耗氧氣的路徑概念'],
     status: ['CO2 偏高', '回到右心', '肺臟完成交換', '左心送出含氧血', '氧氣送達肌肉'],
     moving: ['co2', 'plaque', 'glucose']
@@ -158,7 +158,7 @@ const levels = [
     cargo: ['起點：小腸吸收養分', '必經：肝臟調節', '目的地：大腦'],
     route: ['V', 'R', 'L', 'H', 'B'],
     start: 'I',
-    timeLimit: 65,
+    timeLimit: 130,
     goals: ['知道小腸負責吸收葡萄糖與胺基酸', '理解肝臟可調節養分再供應大腦'],
     status: ['養分已吸收', '肝臟調節完成', '回到右心', '肺臟完成交換', '左心送出血液', '大腦獲得能量'],
     moving: ['pathogen', 'amino', 'plaque']
@@ -169,7 +169,7 @@ const levels = [
     cargo: ['起點：肌肉', '肺循環後回左心', '目的地：腎臟'],
     route: ['R', 'L', 'H', 'K'],
     start: 'M',
-    timeLimit: 55,
+    timeLimit: 110,
     goals: ['理解肌肉回流血需先通過心肺循環', '認識腎臟由全身動脈血供應並進行過濾'],
     status: ['代謝物增加', '回到右心', '肺臟完成交換', '左心送出血液', '腎臟過濾完成'],
     moving: ['toxin', 'co2', 'glucose']
@@ -180,7 +180,7 @@ const levels = [
     cargo: ['起點：大腦缺氧回流', '肺循環補氧', '目的地：大腦'],
     route: ['R', 'L', 'H', 'B'],
     start: 'B',
-    timeLimit: 70,
+    timeLimit: 140,
     goals: ['比較缺氧血與含氧血的路徑差異', '理解大腦不能由靜脈血直接獲得氧氣'],
     status: ['缺氧回流', '回到右心', '氧氣充足', '左心送出含氧血', '供應大腦完成'],
     moving: ['pathogen', 'toxin', 'amino']
@@ -191,7 +191,7 @@ const levels = [
     cargo: ['起點：小腸養分', '肝門循環：小腸→肝臟', '目的地：肌肉'],
     route: ['V', 'R', 'L', 'H', 'M'],
     start: 'I',
-    timeLimit: 70,
+    timeLimit: 140,
     goals: ['統整細胞呼吸需要氧氣與葡萄糖', '理解小腸、肺臟、肌肉在供能任務中的角色分工'],
     status: ['養分已吸收', '肝臟調節完成', '回到右心', '肺臟完成交換', '左心送出補給', '肌肉供能完成'],
     moving: ['plaque', 'co2', 'toxin', 'glucose']
@@ -202,7 +202,7 @@ const levels = [
     cargo: ['起點：小腸吸收', '調節：肝臟', '目的地：肌肉'],
     route: ['V', 'R', 'L', 'H', 'M'],
     start: 'I',
-    timeLimit: 68,
+    timeLimit: 136,
     goals: ['認識小腸吸收與血糖來源的關係', '理解肝臟調節養分後再送往組織使用'],
     status: ['養分已吸收', '肝臟調節完成', '回到右心', '肺臟完成交換', '左心送出血液', '肌肉取得能量'],
     moving: ['glucose', 'plaque', 'pathogen', 'toxin']
@@ -213,7 +213,7 @@ const levels = [
     cargo: ['起點：腎臟調節完成', '肺循環後回左心', '目的地：大腦'],
     route: ['R', 'L', 'H', 'B'],
     start: 'K',
-    timeLimit: 58,
+    timeLimit: 116,
     goals: ['認識腎臟在水分與鹽類平衡中的角色', '理解器官靜脈血必須回右心後才能再供應大腦'],
     status: ['腎臟調節完成', '回到右心', '肺臟完成交換', '左心送出血液', '大腦供應穩定'],
     moving: ['toxin', 'co2', 'plaque', 'amino']
@@ -224,7 +224,7 @@ const levels = [
     cargo: ['小腸吸收：養分', '肝門循環：先到肝臟', '最終供應：大腦'],
     route: ['V', 'R', 'L', 'H', 'B'],
     start: 'I',
-    timeLimit: 85,
+    timeLimit: 170,
     goals: ['整合肺臟、小腸、肝臟、大腦之間的循環運輸路徑', '在限時與巡邏物壓力下判斷正確器官順序'],
     status: ['養分已吸收', '肝臟完成調節', '回到右心', '肺臟完成氣體交換', '左心送出含氧血', '大腦供應完成'],
     moving: ['co2', 'toxin', 'pathogen', 'plaque', 'glucose']
